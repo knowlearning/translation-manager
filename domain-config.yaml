@@ -4,7 +4,20 @@ authorize:
   crossDomain:
     postgres: cross_domain_authorization
 postgres:
-  tables: {}
+  tables:
+    translatable_targets:
+      type: application/json;type=translatable_target
+      columns:
+        source_language: TEXT
+        source_string: TEXT
+        path: TEXT[]
+    translations:
+      type: application/json;type=translation
+      columns:
+        language: TEXT
+        value: TEXT
+        path: TEXT[]
+        current: BOOLEAN
   functions:
     same_domain_authorization:
       returns: BOOLEAN
