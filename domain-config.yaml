@@ -14,10 +14,10 @@ postgres:
     translations:
       type: application/json;type=translation
       columns:
+        translatable_target: TEXT
         language: TEXT
         value: TEXT
         path: TEXT[]
-        current: BOOLEAN
   functions:
     same_domain_authorization:
       returns: BOOLEAN
