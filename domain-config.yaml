@@ -10,7 +10,7 @@ postgres:
       columns:
         source_language: TEXT
         source_string: TEXT
-        path: TEXT[]
+        path: JSONB
     translations:
       type: application/json;type=translation
       columns:
