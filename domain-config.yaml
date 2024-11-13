@@ -56,14 +56,16 @@ postgres:
       body: |
         SELECT
           translatable_targets.path,
-          translations.language,
-          translations.value
-        FROM translations
-        JOIN metadata ON translations.id = metadata.id
-        JOIN translatable_targets ON translatable_targets.id = translations.translatable_target
-        WHERE metadata.owner = 'f74e9cb3-2b53-4c85-9b0c-f1d61b032b3f.localhost:5889'
-          AND translatable_targets.path->0 = to_jsonb($1::text)
+          COALESCE(translations.language, translatable_targets.source_language) AS language,
+          COALESCE(translations.value, translatable_targets.source_string) AS value
+        FROM translatable_targets
+        JOIN metadata target_md ON target_md.id = translatable_targets.id
+        LEFT JOIN translations ON translations.translatable_target = translatable_targets.id
           AND translations.language LIKE $2 || '%'
+        LEFT JOIN metadata translation_md ON translation_md.id = translations.id
+          AND translation_md.owner = 'f74e9cb3-2b53-4c85-9b0c-f1d61b032b3f.localhost:5889'
+        WHERE target_md.owner = 'f74e9cb3-2b53-4c85-9b0c-f1d61b032b3f.localhost:5888'
+          AND translatable_targets.path->0 = to_jsonb($1::text)
 agent: |
   import Agent, { getAgent } from 'npm:@knowlearning/agents/deno.js'
 
