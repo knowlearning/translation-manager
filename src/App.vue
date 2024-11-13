@@ -1,10 +1,11 @@
 <script setup>
+  import Main from './main.vue'
 </script>
 
 <template>
-  <div>
-    Hello World
-  </div>
+  <Suspense>
+    <Main />
+  </Suspense>
 </template>
 
 <style scoped>
