@@ -1,4 +1,6 @@
 <script setup>
+import { computed } from 'vue';
+
   const TRANSLATION_DOMAIN = 'f74e9cb3-2b53-4c85-9b0c-f1d61b032b3f.localhost:5889'
 
   const props = defineProps({
@@ -23,36 +25,49 @@
   }, {})
 
   const buildHeaders = path => ([key, value]) => {
-    const header = { title: key, key: JSON.stringify([...path, key]), align: 'center' }
+    const header = { title: key, value: key, align: 'center' }
 
     if (value !== true) {
       header.children = Object.entries(value).map(buildHeaders([...path, key]))
     }
+    else header.value = JSON.stringify([...path, key])
 
     return header
   }
 
   const headers = [
-    { title: 'Language', key: 'language' },
+    { title: 'Language', value: 'language' },
     ...Object.entries(pathObject).map(buildHeaders([]))
   ]
+
+  console.log(headers)
 
   const languageRows = {}
 
   translations.forEach(({ path, language, value, fallback }) => {
     if (!languageRows[language]) languageRows[language] = {}
 
-    languageRows[language][JSON.stringify(path.slice(1))] = { value, fallback }
+    languageRows[language][JSON.stringify(path.slice(1).map(v => v+''))] = { value, fallback }
   })
 
   console.log('lang rows', languageRows)
 
   const items = Object.entries(languageRows).map(([language, values]) => {
-    values.language = language
+    values.language = { value: language }
     return values
   })
 
   console.log('ITEMS!!!!!!', items)
+
+  const flatHeaders = computed(() => flattenHeaders(headers))
+
+  function flattenHeaders(headers) {
+    return headers.map(header => {
+      if (header.children) return flattenHeaders(header.children)
+      else return header
+    }).flat()
+  }
+
 </script>
 
 <template>
@@ -65,11 +80,12 @@
         :headers="headers"
         :items="items"
       >
-        <template v-slot:item.path="{ item }">
-          {{ item.path.slice(1) }}
-        </template>
-        <template v-slot:item.value="{ item }">
-          {{ item.value }}
+        <template v-slot:item="{ item }">
+          <tr>
+            <td v-for="header in flatHeaders" :key="header.value">
+              {{ item[header.value].value }}
+            </td>
+          </tr>
         </template>
       </v-data-table>
     </v-container>
