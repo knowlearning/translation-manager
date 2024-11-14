@@ -14,13 +14,9 @@
 <template>
   <div>
     <h1>Translations</h1>
-    <div
-      v-for="{ path, language, value } in translations"
-      style="display:flex;"
-    >
-      <div>{{ language }}</div>
-      <div>{{ path.slice(1) }}</div>
-      <div><input :value="value" /></div>
-    </div>
+
+    <v-container>
+      <v-data-table sticky :items="translations"></v-data-table>
+    </v-container>
   </div>
 </template>
