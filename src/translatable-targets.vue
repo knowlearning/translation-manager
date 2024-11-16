@@ -10,8 +10,6 @@ import { computed } from 'vue';
   const lang = '' // ask for all translations with empty prefix
   const id = props.translatableItemId
   const translations = await Agent.query('translation-set', [id, lang], TRANSLATION_DOMAIN)
-  console.log('TRANSLATIONS', translations)
-
 
   const pathObject = translations.reduce((acc, { path }) => {
     const p = path.slice(1)
@@ -24,23 +22,25 @@ import { computed } from 'vue';
     return acc
   }, {})
 
-  const buildHeaders = path => ([key, value]) => {
-    const header = { title: key, value: key, align: 'center' }
+  const sortHeaders = (a, b) => a.title.localeCompare(b.title, undefined, { numeric: true, sensitivity: 'base' })
 
-    if (value !== true) {
-      header.children = Object.entries(value).map(buildHeaders([...path, key]))
-    }
-    else header.value = JSON.stringify([...path, key])
+  const buildHeaders = (pathObject, path) => (
+    Object.entries(pathObject).map(([key, value]) => {
+      const header = { title: key, value: key, align: 'center' }
 
-    return header
-  }
+      if (value !== true) {
+        header.children = buildHeaders(value, [...path, key])
+      }
+      else header.value = JSON.stringify([...path, key])
+
+      return header
+    }).sort(sortHeaders)
+  )
 
   const headers = [
     { title: 'Language', value: 'language' },
-    ...Object.entries(pathObject).map(buildHeaders([]))
+    ...buildHeaders(pathObject, [])
   ]
-
-  console.log(headers)
 
   const languageRows = {}
 
@@ -50,14 +50,10 @@ import { computed } from 'vue';
     languageRows[language][JSON.stringify(path.slice(1).map(v => v+''))] = { value, fallback }
   })
 
-  console.log('lang rows', languageRows)
-
   const items = Object.entries(languageRows).map(([language, values]) => {
     values.language = { value: language }
     return values
   })
-
-  console.log('ITEMS!!!!!!', items)
 
   const flatHeaders = computed(() => flattenHeaders(headers))
 
