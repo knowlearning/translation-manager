@@ -45,7 +45,6 @@ postgres:
       - name: requestedScope
         type: TEXT
   queries:
-    metadata: SELECT * FROM metadata LIMIT 20
     translatable-items: |
       SELECT DISTINCT (path->0) AS translatable_item
       FROM translatable_targets
@@ -64,8 +63,11 @@ postgres:
         LEFT JOIN translations ON translations.translatable_target = translatable_targets.id
           AND translations.language LIKE $2 || '%'
         LEFT JOIN metadata translation_md ON translation_md.id = translations.id
-          AND translation_md.owner = 'f74e9cb3-2b53-4c85-9b0c-f1d61b032b3f.localhost:5889'
-        WHERE target_md.owner = 'f74e9cb3-2b53-4c85-9b0c-f1d61b032b3f.localhost:5888'
+          AND translation_md.owner = $DOMAIN
+        WHERE (
+            target_md.owner = $REQUESTING_DOMAIN
+            OR $REQUESTING_DOMAIN = $DOMAIN
+          )
           AND translatable_targets.path->0 = to_jsonb($1::text)
 agent: |
   import Agent, { getAgent } from 'npm:@knowlearning/agents/deno.js'
