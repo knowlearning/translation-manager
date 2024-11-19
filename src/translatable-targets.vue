@@ -1,5 +1,5 @@
 <script setup>
-  import { computed, reactive } from 'vue'
+  import { computed, ref, reactive } from 'vue'
   import languageCodes from './language-codes.js'
 
   const TRANSLATION_DOMAIN = 'f74e9cb3-2b53-4c85-9b0c-f1d61b032b3f.localhost:5889'
@@ -61,8 +61,8 @@
     return values
   })
 
-  const translationEditData = reactive({})
-  items.push(translationEditData)
+  const currentEditTranslation = ref(null)
+  items.push({})
 
   const flatHeaders = computed(() => flattenHeaders(headers))
 
@@ -73,23 +73,26 @@
     }).flat()
   }
 
-  function loadTranslationEdits() {
-    const { language } = translationEditData
-    if (languageRows[language]) {
-      console.log(languageRows[language], 'wooo!')
-      Object.entries(languageRows[language]).forEach(([key, { value, fallback }]) => {
-        if (key.startsWith('[') && !fallback) {
-          translationEditData[key] = value
-        }
-      })
+  const editData = reactive({})
+
+  async function loadTranslationEdits() {
+    const lang = currentEditTranslation.value
+
+    if (!editData[lang]) {
+      editData[lang] = await Agent.state(`translations/${props.translatableItemId}/${lang}`)
     }
-    else {
+
+    if (languageRows[lang]) {
       Object
-        .keys(translationEditData)
-        .filter(key => key !== 'language')
-        .forEach(key => delete translationEditData[key])
+        .entries(languageRows[lang])
+        .forEach(([key, { value, fallback }]) => {
+          if (!editData[lang] && key.startsWith('[') && !fallback) {
+            editData[key] = value
+          }
+        })
     }
-    console.log('load for editing!!!!!', translationEditData)
+
+    console.log('edit data...', editData)
   }
 
 </script>
@@ -105,7 +108,7 @@
         :items="items"
       >
         <template v-slot:item="{ item }">
-          <tr v-if="item !== translationEditData">
+          <tr v-if="Object.keys(item).length">
             <td v-for="header in flatHeaders" :key="header.value">
               {{ item[header.value].value }}
             </td>
@@ -113,10 +116,13 @@
           <tr v-else>
             <td v-for="header in flatHeaders" :key="header.value">
               <span v-if="header.value === 'source'"></span>
-              <div v-else-if="header.value === 'language'">
+              <div
+                v-else-if="header.value === 'language'"
+                style="margin-top: 8px;"
+              >
                 <v-select
                   label="Edit Language"
-                  v-model="translationEditData['language']"
+                  v-model="currentEditTranslation"
                   clearable
                   variant="outlined"
                   item-props
@@ -131,12 +137,18 @@
                 >
                 </v-select>
               </div>
-              <v-textarea
-                v-else-if="translationEditData['language']"
-                v-model="translationEditData[header.value]"
-                variant="outlined"
-                auto-grow
-              />
+              <div
+                v-else-if="currentEditTranslation && editData[currentEditTranslation]"
+                style="margin-top: 8px;"
+              >
+              {{ editData[currentEditTranslation] }}
+              {{ header.value }}
+                <v-textarea
+                  v-model="editData[currentEditTranslation][header.value]"
+                  variant="outlined"
+                  auto-grow
+                />
+              </div>
             </td>
           </tr>
         </template>
