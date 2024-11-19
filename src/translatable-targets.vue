@@ -114,10 +114,13 @@
             </td>
           </tr>
           <tr v-else>
-            <td v-for="header in flatHeaders" :key="header.value">
-              <span v-if="header.value === 'source'"></span>
+            <td
+              v-for="header in flatHeaders.slice(1)"
+              :key="header.value"
+              :colspan="header.value === 'language' ? 2 : 1"
+            >
               <div
-                v-else-if="header.value === 'language'"
+                v-if="header.value === 'language'"
                 style="margin-top: 8px;"
               >
                 <v-select
