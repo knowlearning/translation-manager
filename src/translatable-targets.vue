@@ -1,5 +1,6 @@
 <script setup>
-import { computed } from 'vue';
+  import { computed, reactive } from 'vue'
+  import languageCodes from './language-codes.js'
 
   const TRANSLATION_DOMAIN = 'f74e9cb3-2b53-4c85-9b0c-f1d61b032b3f.localhost:5889'
 
@@ -63,6 +64,9 @@ import { computed } from 'vue';
     return values
   })
 
+  const newTranslationData = reactive({})
+  items.push(newTranslationData)
+
   const flatHeaders = computed(() => flattenHeaders(headers))
 
   function flattenHeaders(headers) {
@@ -85,9 +89,41 @@ import { computed } from 'vue';
         :items="items"
       >
         <template v-slot:item="{ item }">
-          <tr>
+          <tr v-if="item !== newTranslationData">
             <td v-for="header in flatHeaders" :key="header.value">
               {{ item[header.value].value }}
+            </td>
+          </tr>
+          <tr v-else>
+            <td v-for="header in flatHeaders" :key="header.value">
+              <span v-if="header.value === 'source'"></span>
+              <div v-else-if="header.value === 'language'">
+                <v-select
+                  label="Language"
+                  v-model="newTranslationData['language']"
+                  clearable
+                  variant="outlined"
+                  item-props
+                  :items="languageCodes.map(({ code, name }) => {
+                    return {
+                      title: name,
+                      subtitle: code
+                    }
+                  })"
+                >
+                </v-select>
+                <v-btn
+                  v-if="newTranslationData['language']"
+                >
+                  Save
+                </v-btn>
+              </div>
+              <v-textarea
+                v-else
+                v-model="newTranslationData[header.value]"
+                variant="outlined"
+                auto-grow
+              />
             </td>
           </tr>
         </template>
