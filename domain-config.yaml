@@ -57,7 +57,8 @@ postgres:
           translatable_targets.path,
           COALESCE(translations.language, translatable_targets.source_language) AS language,
           COALESCE(translations.value, translatable_targets.source_string) AS value,
-          (translations.value IS NULL) AS fallback
+          (translations.value IS NULL) AS fallback,
+          (translatable_targets.source_language = translations.language) AS source
         FROM translatable_targets
         JOIN metadata target_md ON target_md.id = translatable_targets.id
         LEFT JOIN translations ON translations.translatable_target = translatable_targets.id

@@ -11,6 +11,8 @@ import { computed } from 'vue';
   const id = props.translatableItemId
   const translations = await Agent.query('translation-set', [id, lang], TRANSLATION_DOMAIN)
 
+  console.log(translations)
+
   const pathObject = translations.reduce((acc, { path }) => {
     const p = path.slice(1)
     let ref = acc
@@ -38,20 +40,26 @@ import { computed } from 'vue';
   )
 
   const headers = [
+    { title: 'Source', value: 'source' },
     { title: 'Language', value: 'language' },
     ...buildHeaders(pathObject, [])
   ]
 
   const languageRows = {}
 
-  translations.forEach(({ path, language, value, fallback }) => {
-    if (!languageRows[language]) languageRows[language] = {}
+  translations.forEach(({ path, language, value, fallback, source }) => {
+    if (!languageRows[language]) {
+      languageRows[language] = {
+        source: source ? { value: true } : { value: false }
+      }
+    }
 
     languageRows[language][JSON.stringify(path.slice(1).map(v => v+''))] = { value, fallback }
   })
 
   const items = Object.entries(languageRows).map(([language, values]) => {
     values.language = { value: language }
+    console.log(values)
     return values
   })
 
