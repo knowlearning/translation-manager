@@ -12,8 +12,6 @@
   const id = props.translatableItemId
   const translations = await Agent.query('translation-set', [id, lang], TRANSLATION_DOMAIN)
 
-  console.log(translations)
-
   const pathObject = translations.reduce((acc, { path }) => {
     const p = path.slice(1)
     let ref = acc
@@ -60,12 +58,11 @@
 
   const items = Object.entries(languageRows).map(([language, values]) => {
     values.language = { value: language }
-    console.log(values)
     return values
   })
 
-  const newTranslationData = reactive({})
-  items.push(newTranslationData)
+  const translationEditData = reactive({})
+  items.push(translationEditData)
 
   const flatHeaders = computed(() => flattenHeaders(headers))
 
@@ -74,6 +71,25 @@
       if (header.children) return flattenHeaders(header.children)
       else return header
     }).flat()
+  }
+
+  function loadTranslationEdits() {
+    const { language } = translationEditData
+    if (languageRows[language]) {
+      console.log(languageRows[language], 'wooo!')
+      Object.entries(languageRows[language]).forEach(([key, { value, fallback }]) => {
+        if (key.startsWith('[') && !fallback) {
+          translationEditData[key] = value
+        }
+      })
+    }
+    else {
+      Object
+        .keys(translationEditData)
+        .filter(key => key !== 'language')
+        .forEach(key => delete translationEditData[key])
+    }
+    console.log('load for editing!!!!!', translationEditData)
   }
 
 </script>
@@ -89,7 +105,7 @@
         :items="items"
       >
         <template v-slot:item="{ item }">
-          <tr v-if="item !== newTranslationData">
+          <tr v-if="item !== translationEditData">
             <td v-for="header in flatHeaders" :key="header.value">
               {{ item[header.value].value }}
             </td>
@@ -99,28 +115,25 @@
               <span v-if="header.value === 'source'"></span>
               <div v-else-if="header.value === 'language'">
                 <v-select
-                  label="Language"
-                  v-model="newTranslationData['language']"
+                  label="Edit Language"
+                  v-model="translationEditData['language']"
                   clearable
                   variant="outlined"
                   item-props
+                  @update:model-value="loadTranslationEdits"
                   :items="languageCodes.map(({ code, name }) => {
                     return {
                       title: name,
-                      subtitle: code
+                      subtitle: code,
+                      value: code
                     }
                   })"
                 >
                 </v-select>
-                <v-btn
-                  v-if="newTranslationData['language']"
-                >
-                  Save
-                </v-btn>
               </div>
               <v-textarea
-                v-else
-                v-model="newTranslationData[header.value]"
+                v-else-if="translationEditData['language']"
+                v-model="translationEditData[header.value]"
                 variant="outlined"
                 auto-grow
               />

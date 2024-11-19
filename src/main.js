@@ -9,6 +9,7 @@ import * as components from 'vuetify/components' //  TODO: trim down imports
 import * as directives from 'vuetify/directives' //  TODO: trim down imports
 
 import 'vuetify/styles'
+import '@fortawesome/fontawesome-free/css/all.css'
 import './style.css'
 
 window.Agent = Agent
