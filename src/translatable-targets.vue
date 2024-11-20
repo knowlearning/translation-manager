@@ -12,12 +12,14 @@
   const id = props.translatableItemId
   const translations = await Agent.query('translation-set', [id, lang], TRANSLATION_DOMAIN)
 
-  const pathObject = translations.reduce((acc, { path }) => {
+  console.log('translations', translations)
+
+  const pathObject = translations.reduce((acc, { path, translatable_target }) => {
     const p = path.slice(1)
     let ref = acc
     for (let i=0; i<p.length; i++) {
       const field = p[i]
-      if (!ref[field]) ref[field] = p.length === i+1 ? true : {}
+      if (!ref[field]) ref[field] = p.length === i+1 ? translatable_target : {}
       ref = ref[field]
     }
     return acc
@@ -29,10 +31,12 @@
     Object.entries(pathObject).map(([key, value]) => {
       const header = { title: key, value: key, align: 'center' }
 
-      if (value !== true) {
+      if (typeof value !== 'string') {
         header.children = buildHeaders(value, [...path, key])
       }
-      else header.value = JSON.stringify([...path, key])
+      else {
+        header.value = value
+      }
 
       return header
     }).sort(sortHeaders)
@@ -46,14 +50,14 @@
 
   const languageRows = {}
 
-  translations.forEach(({ path, language, value, fallback, source }) => {
+  translations.forEach(({ path, language, value, fallback, source, translatable_target }) => {
     if (!languageRows[language]) {
       languageRows[language] = {
         source: source ? { value: true } : { value: false }
       }
     }
 
-    languageRows[language][JSON.stringify(path.slice(1).map(v => v+''))] = { value, fallback }
+    languageRows[language][translatable_target] = { value, fallback }
   })
 
   const items = Object.entries(languageRows).map(([language, values]) => {
