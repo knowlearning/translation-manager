@@ -114,7 +114,7 @@
         <template v-slot:item="{ item }">
           <tr v-if="Object.keys(item).length">
             <td v-for="header in flatHeaders" :key="header.value">
-              {{ item[header.value].value }}
+              {{ item[header.value] ? item[header.value].value : '' }}
             </td>
           </tr>
           <tr v-else>

@@ -85,11 +85,7 @@ agent: |
       if (scope.startsWith('translatable_target/')) {
         //  TODO: validate user is a domain agent with rights to access
         const  { source_language, source_string } = await Agent.state(id)
-        const translationScope = await getTranslationScope(id, source_language)
-
-        translationScope.translatable_target = id
-        translationScope.language = source_language
-        translationScope.value = source_string
+        await setTranslation(id, source_language, source_string)
       }
       else if (scope.startsWith('translations/')) {
         const [,, language] = scope.split('/')
@@ -100,17 +96,22 @@ agent: |
         await Promise.all(
           Object
             .entries(paths)
-            .map(async ([translatable_target, value]) => {
-              const translationScope = await getTranslationScope(translatable_target, language)
-
-              translationScope.translatable_target = translatable_target
-              translationScope.language = language
-              translationScope.value = value
+            .map(async ([translatable_target, language_string]) => {
+              return setTranslation(translatable_target, language, language_string)
             })
         )
       }
     })
   })
+
+
+  async function setTranslation(id, language, string) {
+    const scope = await getTranslationScope(id, language)
+
+    scope.translatable_target = id
+    scope.language = language
+    scope.value = string
+  }
 
   async function getTranslationScope(id, lang) {
     const name = `translation/${id}/${lang}`
