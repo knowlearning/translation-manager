@@ -144,8 +144,6 @@
                 v-else-if="currentEditTranslation && editData[currentEditTranslation]"
                 style="margin-top: 8px;"
               >
-              {{ editData[currentEditTranslation] }}
-              {{ header.value }}
                 <v-textarea
                   v-model="editData[currentEditTranslation][header.value]"
                   variant="outlined"
