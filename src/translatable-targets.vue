@@ -8,9 +8,9 @@
     translatableItemId: String
   })
 
-  const lang = '' // ask for all translations with empty prefix
+  const languages = ['en-us', 'en']
   const id = props.translatableItemId
-  const translations = await Agent.query('translation-set', [id, lang], TRANSLATION_DOMAIN)
+  const translations = await Agent.query('translations', [id, languages], TRANSLATION_DOMAIN)
 
   console.log('translations', translations)
 
@@ -43,21 +43,21 @@
   )
 
   const headers = [
-    { title: 'Source', value: 'source' },
+    { title: 'Source', value: 'is_source' },
     { title: 'Language', value: 'language' },
     ...buildHeaders(pathObject, [])
   ]
 
   const languageRows = {}
 
-  translations.forEach(({ path, language, value, fallback, source, translatable_target }) => {
+  translations.forEach(({ path, language, value, is_fallback, is_source, translatable_target }) => {
     if (!languageRows[language]) {
       languageRows[language] = {
-        source: source ? { value: true } : { value: false }
+        is_source: is_source ? { value: true } : { value: false }
       }
     }
 
-    languageRows[language][translatable_target] = { value, fallback }
+    languageRows[language][translatable_target] = { value, is_fallback }
   })
 
   const items = Object.entries(languageRows).map(([language, values]) => {

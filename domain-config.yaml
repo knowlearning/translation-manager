@@ -49,7 +49,7 @@ postgres:
       SELECT DISTINCT (path->0) AS translatable_item
       FROM translatable_targets
       WHERE jsonb_typeof(path) = 'array'
-    translation-set:
+    translations:
       domains:
       - f74e9cb3-2b53-4c85-9b0c-f1d61b032b3f.localhost:5888
       - c0f3a481-d4d5-4133-a198-94a325aa4536.localhost:6061
@@ -70,8 +70,19 @@ postgres:
           target_md.updated <= translation_md.updated AS is_current
         FROM translatable_targets
         JOIN metadata target_md ON target_md.id = translatable_targets.id
-        LEFT JOIN translations ON translations.translatable_target = translatable_targets.id
-          AND translations.language LIKE $2 || '%'
+        LEFT JOIN LATERAL (
+          SELECT
+            t.id,
+            t.language,
+            t.value,
+            lp.priority
+          FROM translations t
+          JOIN unnest($2::text[]) WITH ORDINALITY lp(language, priority)
+            ON t.language = lp.language
+          WHERE t.translatable_target = translatable_targets.id
+          ORDER BY lp.priority
+          LIMIT 1
+        ) translations ON true
         LEFT JOIN metadata translation_md ON translation_md.id = translations.id
           AND translation_md.owner = $DOMAIN
         WHERE (
