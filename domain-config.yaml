@@ -55,12 +55,19 @@ postgres:
       - c0f3a481-d4d5-4133-a198-94a325aa4536.localhost:6061
       body: |
         SELECT
-          translatable_targets.id as translatable_target,
-          translatable_targets.path,
-          COALESCE(translations.language, translatable_targets.source_language) AS language,
-          COALESCE(translations.value, translatable_targets.source_string) AS value,
+          translatable_targets.id AS translatable_target,
+          translatable_targets.path AS path,
+          COALESCE(
+            translations.language,
+            translatable_targets.source_language
+          ) AS language,
+          COALESCE(
+            translations.value,
+            translatable_targets.source_string
+          ) AS value,
           (translations.value IS NULL) AS fallback,
-          (translatable_targets.source_language = translations.language) AS source
+          (translatable_targets.source_language = translations.language) AS is_source,
+          target_md.updated <= translation_md.updated AS is_current
         FROM translatable_targets
         JOIN metadata target_md ON target_md.id = translatable_targets.id
         LEFT JOIN translations ON translations.translatable_target = translatable_targets.id
