@@ -8,11 +8,11 @@
     translatableItemId: String
   })
 
-  const languages = ref(['en-us', 'fr'])
+  const languages = ref(['en-us', 'fr', 'es', 'zh-cn'])
   const id = props.translatableItemId
-  const translations = await Agent.query('translations', [id, languages.value], TRANSLATION_DOMAIN)
+  const translations = await Agent.query('translations-for-item', [id, languages.value], TRANSLATION_DOMAIN)
 
-  console.log('translations', translations)
+  console.log('translations-for-item', translations)
 
   const pathObject = translations.reduce((acc, { path, translatable_target }) => {
     const p = path.slice(1)
@@ -50,15 +50,20 @@
 
   const languageRows = {}
 
+  function initializeLanguageRow(language, is_source) {
+    languageRows[language] = { is_source: is_source ? { value: true } : { value: false } }
+  }
+
   translations.forEach(({ language, value, is_fallback, is_source, translatable_target }) => {
-    if (!languageRows[language]) {
-      languageRows[language] = {
-        is_source: is_source ? { value: true } : { value: false }
-      }
-    }
+    if (!languageRows[language]) initializeLanguageRow(language, is_source)
 
     languageRows[language][translatable_target] = { value, is_fallback }
   })
+
+  languages
+    .value
+    .filter(language => !languageRows[language])
+    .forEach(initializeLanguageRow)
 
   const items = Object.entries(languageRows).map(([language, values]) => {
     values.language = { value: language }
