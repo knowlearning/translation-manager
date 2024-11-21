@@ -1,5 +1,5 @@
 <script setup>
-  import { computed, ref, reactive } from 'vue'
+  import { computed, ref, reactive, watch } from 'vue'
   import languageCodes from './language-codes.js'
 
   const TRANSLATION_DOMAIN = 'f74e9cb3-2b53-4c85-9b0c-f1d61b032b3f.localhost:5889'
@@ -8,9 +8,9 @@
     translatableItemId: String
   })
 
-  const languages = ['en-us', 'en']
+  const languages = ref(['en-us', 'fr'])
   const id = props.translatableItemId
-  const translations = await Agent.query('translations', [id, languages], TRANSLATION_DOMAIN)
+  const translations = await Agent.query('translations', [id, languages.value], TRANSLATION_DOMAIN)
 
   console.log('translations', translations)
 
@@ -50,7 +50,7 @@
 
   const languageRows = {}
 
-  translations.forEach(({ path, language, value, is_fallback, is_source, translatable_target }) => {
+  translations.forEach(({ language, value, is_fallback, is_source, translatable_target }) => {
     if (!languageRows[language]) {
       languageRows[language] = {
         is_source: is_source ? { value: true } : { value: false }
@@ -104,7 +104,15 @@
 <template>
   <div>
     <h1>Translations</h1>
-
+    <v-select
+      v-model="languages"
+      label="Select languages to show"
+      multiple
+      chips
+      :items="languageCodes.map(({ code, name }) => {
+        return { title: name, subtitle: code, value: code }
+      })"
+    />
     <v-container>
       <v-data-table
         sticky
@@ -141,8 +149,7 @@
                       value: code
                     }
                   })"
-                >
-                </v-select>
+                />
               </div>
               <div
                 v-else-if="currentEditTranslation && editData[currentEditTranslation]"
