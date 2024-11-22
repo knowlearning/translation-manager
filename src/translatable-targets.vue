@@ -38,6 +38,8 @@
           if (!acc[translatable_target]) {
             acc[translatable_target] = {
               path: path.slice(1),
+              translatable_item: path[0],
+              translatable_target,
               ...languagePlaceholders
             }
           }
@@ -76,24 +78,10 @@
     console.log('items', items.value)
   }
 
-  async function loadTranslationEdits() {
-    const lang = currentEditTranslation.value
-
-    if (!editData[lang]) {
-      editData[lang] = await Agent.state(`translations/${props.translatableItemId}/${lang}`)
-    }
-
-    if (languageRows[lang]) {
-      Object
-        .entries(languageRows[lang])
-        .forEach(([key, { value, fallback }]) => {
-          if (!editData[lang] && key.startsWith('[') && !fallback) {
-            editData[key] = value
-          }
-        })
-    }
-
-    console.log('edit data...', editData)
+  async function saveLanguageTranslation({translatable_item, translatable_target}, language, value) {
+    const state = await Agent.state(`translations/${translatable_item}/${language}`)
+    state[translatable_target] = value
+    console.log('saved?', state)
   }
 
   function editKey({ path }, language) { return JSON.stringify([...path, language]) }
@@ -152,6 +140,10 @@
             <v-btn
               text="save"
               @click="() => {
+                // TODO: ensure optimistic update applied
+                const editedValue = edits[editKey(item, language)]
+                item[language] = editedValue
+                saveLanguageTranslation(item, language, editedValue)
                 openEditor = null
               }"
             />
@@ -163,7 +155,10 @@
               variant="plain"
               size="x-small"
               icon="fa fa-pencil"
-              @click="openEditor = editKey(item, language)"
+              @click="() => {
+                openEditor = editKey(item, language)
+                edits[editKey(item, language)] = value
+              }"
             />
           </div>
         </template>
