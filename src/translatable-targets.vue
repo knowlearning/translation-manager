@@ -10,70 +10,80 @@
 
   const languages = ref(['en-us', 'fr', 'es', 'zh-cn'])
   const id = props.translatableItemId
-  const translations = await Agent.query('translations-for-item', [id, languages.value], TRANSLATION_DOMAIN)
+  const currentEditTranslation = ref(null)
+  const headers = ref([])
+  const items = ref([])
 
-  console.log('translations-for-item', translations)
+  await loadTranslations()
 
-  const pathObject = translations.reduce((acc, { path, translatable_target }) => {
-    const p = path.slice(1)
-    let ref = acc
-    for (let i=0; i<p.length; i++) {
-      const field = p[i]
-      if (!ref[field]) ref[field] = p.length === i+1 ? translatable_target : {}
-      ref = ref[field]
-    }
-    return acc
-  }, {})
-
-  const sortHeaders = (a, b) => a.title.localeCompare(b.title, undefined, { numeric: true, sensitivity: 'base' })
-
-  const buildHeaders = (pathObject, path) => (
-    Object.entries(pathObject).map(([key, value]) => {
-      const header = { title: key, value: key, align: 'center' }
-
-      if (typeof value !== 'string') {
-        header.children = buildHeaders(value, [...path, key])
-      }
-      else {
-        header.value = value
-      }
-
-      return header
-    }).sort(sortHeaders)
+  watch(
+    () => languages.value,
+    () => loadTranslations()
   )
 
-  const headers = [
-    { title: 'Source', value: 'is_source' },
-    { title: 'Language', value: 'language' },
-    ...buildHeaders(pathObject, [])
-  ]
+  async function loadTranslations() {
+    const translations = await Agent.query('translations-for-item', [id, languages.value], TRANSLATION_DOMAIN)
 
-  const languageRows = {}
+    console.log('translations-for-item', translations)
 
-  function initializeLanguageRow(language, is_source) {
-    languageRows[language] = { is_source: is_source ? { value: true } : { value: false } }
+    const pathObject = translations.reduce((acc, { path, translatable_target }) => {
+      const p = path.slice(1)
+      let ref = acc
+      for (let i=0; i<p.length; i++) {
+        const field = p[i]
+        if (!ref[field]) ref[field] = p.length === i+1 ? translatable_target : {}
+        ref = ref[field]
+      }
+      return acc
+    }, {})
+
+    const sortHeaders = (a, b) => a.title.localeCompare(b.title, undefined, { numeric: true, sensitivity: 'base' })
+
+    const buildHeaders = (pathObject, path) => (
+      Object.entries(pathObject).map(([key, value]) => {
+        const header = { title: key, value: key, align: 'center' }
+
+        if (typeof value !== 'string') {
+          header.children = buildHeaders(value, [...path, key])
+        }
+        else {
+          header.value = value
+        }
+
+        return header
+      }).sort(sortHeaders)
+    )
+
+    headers.value = [
+      { title: 'Source', value: 'is_source' },
+      { title: 'Language', value: 'language' },
+      ...buildHeaders(pathObject, [])
+    ]
+
+    const languageRows = {}
+
+    function initializeLanguageRow(language, is_source) {
+      languageRows[language] = { is_source: is_source ? { value: true } : { value: false } }
+    }
+
+    translations.forEach(({ language, value, is_fallback, is_source, translatable_target }) => {
+      if (!languageRows[language]) initializeLanguageRow(language, is_source)
+
+      languageRows[language][translatable_target] = { value, is_fallback }
+    })
+
+    languages
+      .value
+      .filter(language => !languageRows[language])
+      .forEach(initializeLanguageRow)
+
+    items.value = Object.entries(languageRows).map(([language, values]) => {
+      values.language = { value: language }
+      return values
+    })
   }
 
-  translations.forEach(({ language, value, is_fallback, is_source, translatable_target }) => {
-    if (!languageRows[language]) initializeLanguageRow(language, is_source)
-
-    languageRows[language][translatable_target] = { value, is_fallback }
-  })
-
-  languages
-    .value
-    .filter(language => !languageRows[language])
-    .forEach(initializeLanguageRow)
-
-  const items = Object.entries(languageRows).map(([language, values]) => {
-    values.language = { value: language }
-    return values
-  })
-
-  const currentEditTranslation = ref(null)
-  items.push({})
-
-  const flatHeaders = computed(() => flattenHeaders(headers))
+  const flatHeaders = computed(() => flattenHeaders(headers.value))
 
   function flattenHeaders(headers) {
     return headers.map(header => {
