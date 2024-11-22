@@ -97,75 +97,73 @@
 </script>
 
 <template>
-  <div>
-    <v-container>
-      <v-autocomplete
-        v-model="languages"
-        label="Select languages to show"
-        variant="solo-filled"
-        multiple
-        chips
-        closable-chips
-        :items="languageCodes.map(({ code, name }) => ({ title: name, subtitle: code, value: code }))"
-      />
-      <v-switch
-        v-model="editing"
-        color="primary"
-        :label="editing ? 'Editing' : 'Edit'"
-      />
-      <v-data-table
-        sticky
-        :headers="headers"
-        :items="items"
-        show-slect
+  <v-container>
+    <v-autocomplete
+      v-model="languages"
+      label="Select languages to show"
+      variant="solo-filled"
+      multiple
+      chips
+      closable-chips
+      :items="languageCodes.map(({ code, name }) => ({ title: name, subtitle: code, value: code }))"
+    />
+    <v-switch
+      v-model="editing"
+      color="primary"
+      :label="editing ? 'Editing' : 'Edit'"
+    />
+    <v-data-table
+      sticky
+      :headers="headers"
+      :items="items"
+      show-slect
+    >
+      <template v-slot:item.path="{ value }">
+        {{ value }}
+      </template>
+      <template v-slot:item.source="{ value }">
+        {{ value }}
+      </template>
+      <template
+        v-for="language in languages"
+        v-slot:[`item.${language}`]="{ value, item }"
       >
-        <template v-slot:item.path="{ value }">
-          {{ value }}
-        </template>
-        <template v-slot:item.source="{ value }">
-          {{ value }}
-        </template>
-        <template
-          v-for="language in languages"
-          v-slot:[`item.${language}`]="{ value, item }"
+        <div
+          v-if="editing && openEditor === editKey(item, language)"
         >
-          <div
-            v-if="editing && openEditor === editKey(item, language)"
-          >
-            <v-textarea
-              variant="outlined"
-              autofocus
-              v-model="edits[editKey(item, language)]"
-              @keydown.shift.enter="save(item, language)"
-            />
-            <v-btn
-              text="compare"
-            />
-            <v-btn
-              text="cancel"
-              @click="openEditor = null"
-            />
-            <v-btn
-              text="save"
-              @click="save(item, language)"
-            />
-          </div>
-          <div v-else>
-            {{ value }}
-            <v-btn
-              v-if="editing && !openEditor"
-              variant="plain"
-              size="x-small"
-              icon="fa fa-pencil"
-              @click="() => {
-                const key = editKey(item, language)
-                openEditor = key
-                edits[key] = edits[key] || value
-              }"
-            />
-          </div>
-        </template>
-      </v-data-table>
-    </v-container>
-  </div>
+          <v-textarea
+            variant="outlined"
+            autofocus
+            v-model="edits[editKey(item, language)]"
+            @keydown.shift.enter="save(item, language)"
+          />
+          <v-btn
+            text="compare"
+          />
+          <v-btn
+            text="cancel"
+            @click="openEditor = null"
+          />
+          <v-btn
+            text="save"
+            @click="save(item, language)"
+          />
+        </div>
+        <div v-else>
+          {{ value }}
+          <v-btn
+            v-if="editing && !openEditor"
+            variant="plain"
+            size="x-small"
+            icon="fa fa-pencil"
+            @click="() => {
+              const key = editKey(item, language)
+              openEditor = key
+              edits[key] = edits[key] || value
+            }"
+          />
+        </div>
+      </template>
+    </v-data-table>
+  </v-container>
 </template>

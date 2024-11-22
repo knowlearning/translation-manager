@@ -25,14 +25,17 @@
           </v-list-item>
         </v-list>
       </v-navigation-drawer>
-      <div v-if="!drawer">
-        <v-btn
-          variant="plain"
-          @click="drawer = true"
-        >
-          DRAWER!!!!!!!!
-        </v-btn>
-      </div>
+      <v-app-bar
+        scroll-behavior="elevate"
+      >
+        <template v-slot:prepend>
+          <v-btn
+            variant="plain"
+            :icon="drawer ? 'fa-solid fa-chevron-left' : 'fa-solid fa-bars'"
+            @click="drawer = !drawer"
+          />
+        </template>
+      </v-app-bar>
       <TranslatableTargets
         v-if="selected"
         :key="selected"
