@@ -159,8 +159,9 @@
               size="x-small"
               icon="fa fa-pencil"
               @click="() => {
-                openEditor = editKey(item, language)
-                edits[editKey(item, language)] = value
+                const key = editKey(item, language)
+                openEditor = key
+                edits[key] = edits[key] || value
               }"
             />
           </div>
