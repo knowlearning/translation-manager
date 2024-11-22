@@ -86,6 +86,14 @@
 
   function editKey({ path }, language) { return JSON.stringify([...path, language]) }
 
+  async function save(item, language) {
+    // TODO: ensure optimistic update applied
+    const editedValue = edits[editKey(item, language)]
+    item[language] = editedValue
+    saveLanguageTranslation(item, language, editedValue)
+    openEditor.value = null
+  }
+
 </script>
 
 <template>
@@ -129,6 +137,7 @@
               variant="outlined"
               autofocus
               v-model="edits[editKey(item, language)]"
+              @keydown.shift.enter="save(item, language)"
             />
             <v-btn
               text="compare"
@@ -139,13 +148,7 @@
             />
             <v-btn
               text="save"
-              @click="() => {
-                // TODO: ensure optimistic update applied
-                const editedValue = edits[editKey(item, language)]
-                item[language] = editedValue
-                saveLanguageTranslation(item, language, editedValue)
-                openEditor = null
-              }"
+              @click="save(item, language)"
             />
           </div>
           <div v-else>
