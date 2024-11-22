@@ -25,74 +25,35 @@
     const translations = await Agent.query('translations-for-item', [id, languages.value], TRANSLATION_DOMAIN)
 
     console.log('translations-for-item', translations)
-
-    const pathObject = translations.reduce((acc, { path, translatable_target }) => {
-      const p = path.slice(1)
-      let ref = acc
-      for (let i=0; i<p.length; i++) {
-        const field = p[i]
-        if (!ref[field]) ref[field] = p.length === i+1 ? translatable_target : {}
-        ref = ref[field]
-      }
-      return acc
-    }, {})
-
-    const sortHeaders = (a, b) => a.title.localeCompare(b.title, undefined, { numeric: true, sensitivity: 'base' })
-
-    const buildHeaders = (pathObject, path) => (
-      Object.entries(pathObject).map(([key, value]) => {
-        const header = { title: key, value: key, align: 'center' }
-
-        if (typeof value !== 'string') {
-          header.children = buildHeaders(value, [...path, key])
-        }
-        else {
-          header.value = value
-        }
-
-        return header
-      }).sort(sortHeaders)
+    const languagePlaceholders = (
+      languages
+        .value
+        .reduce((acc, language) => {
+          acc[language] = false
+          return acc
+        }, {})
     )
 
-    headers.value = [
-      { title: 'Source', value: 'is_source' },
-      { title: 'Language', value: 'language' },
-      ...buildHeaders(pathObject, [])
-    ]
+    const t = (
+      translations
+        .reduce((acc, { translatable_target, language, path, is_source, value }) => {
+          if (!acc[translatable_target]) acc[translatable_target] = { path: path.slice(1), ...languagePlaceholders }
+          if (is_source) acc[translatable_target].source = value
 
-    const languageRows = {}
+          acc[translatable_target][language] = true
 
-    function initializeLanguageRow(language, is_source) {
-      languageRows[language] = { is_source: is_source ? { value: true } : { value: false } }
-    }
+          return acc
+        }, {})
+    )
 
-    translations.forEach(({ language, value, is_fallback, is_source, translatable_target }) => {
-      if (!languageRows[language]) initializeLanguageRow(language, is_source)
+    console.log(t)
 
-      languageRows[language][translatable_target] = { value, is_fallback }
-    })
 
-    languages
-      .value
-      .filter(language => !languageRows[language])
-      .forEach(initializeLanguageRow)
 
-    items.value = Object.entries(languageRows).map(([language, values]) => {
-      values.language = { value: language }
-      return values
-    })
+
+    headers.value = ['path', ...languages.value]
+    items.value = Object.values(t)
   }
-
-  const flatHeaders = computed(() => flattenHeaders(headers.value))
-
-  function flattenHeaders(headers) {
-    return headers.map(header => {
-      if (header.children) return flattenHeaders(header.children)
-      else return header
-    }).flat()
-  }
-
-  const editData = reactive({})
 
   async function loadTranslationEdits() {
     const lang = currentEditTranslation.value
@@ -124,61 +85,16 @@
       label="Select languages to show"
       multiple
       chips
-      :items="languageCodes.map(({ code, name }) => {
-        return { title: name, subtitle: code, value: code }
-      })"
+      closable-chips
+      :headers="headers"
+      :items="languageCodes.map(({ code, name }) => ({ title: name, subtitle: code, value: code }))"
     />
     <v-container>
       <v-data-table
         sticky
-        :headers="headers"
         :items="items"
+        show-select
       >
-        <template v-slot:item="{ item }">
-          <tr v-if="Object.keys(item).length">
-            <td v-for="header in flatHeaders" :key="header.value">
-              {{ item[header.value] ? item[header.value].value : '' }}
-            </td>
-          </tr>
-          <tr v-else>
-            <td
-              v-for="header in flatHeaders.slice(1)"
-              :key="header.value"
-              :colspan="header.value === 'language' ? 2 : 1"
-            >
-              <div
-                v-if="header.value === 'language'"
-                style="margin-top: 8px;"
-              >
-                <v-select
-                  label="Edit Language"
-                  v-model="currentEditTranslation"
-                  clearable
-                  variant="outlined"
-                  item-props
-                  @update:model-value="loadTranslationEdits"
-                  :items="languageCodes.map(({ code, name }) => {
-                    return {
-                      title: name,
-                      subtitle: code,
-                      value: code
-                    }
-                  })"
-                />
-              </div>
-              <div
-                v-else-if="currentEditTranslation && editData[currentEditTranslation]"
-                style="margin-top: 8px;"
-              >
-                <v-textarea
-                  v-model="editData[currentEditTranslation][header.value]"
-                  variant="outlined"
-                  auto-grow
-                />
-              </div>
-            </td>
-          </tr>
-        </template>
       </v-data-table>
     </v-container>
   </div>
