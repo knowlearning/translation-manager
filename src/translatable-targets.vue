@@ -104,9 +104,10 @@
   <div>
     <h1>Translations</h1>
     <v-container>
-      <v-select
+      <v-autocomplete
         v-model="languages"
         label="Select languages to show"
+        variant="solo-filled"
         multiple
         chips
         closable-chips
@@ -140,6 +141,9 @@
               variant="outlined"
               autofocus
               v-model="edits[editKey(item, language)]"
+            />
+            <v-btn
+              text="compare"
             />
             <v-btn
               text="cancel"
