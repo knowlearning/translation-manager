@@ -98,7 +98,6 @@
 
 <template>
   <div>
-    <h1>Translations</h1>
     <v-container>
       <v-autocomplete
         v-model="languages"

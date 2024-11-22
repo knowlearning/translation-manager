@@ -5,24 +5,41 @@
   const translatableItems = await Agent.query('translatable-items')
   const translatableItemIds = translatableItems.map(i => i.translatable_item)
 
-  const selectedTranslatableItemId = ref(null)
+  const selected = ref(null)
+  const drawer = ref(true)
 </script>
 
 <template>
-  <div>
-    <div
-      v-for="id in translatableItemIds"
-      :class="{ active: selectedTranslatableItemId === id }"
-      @click="selectedTranslatableItemId = id"
-    >
-      {{ id }}
-    </div>
-    <TranslatableTargets
-      v-if="selectedTranslatableItemId"
-      :key="selectedTranslatableItemId"
-      :translatableItemId="selectedTranslatableItemId"
-    />
-  </div>
+  <v-app>
+    <v-main>
+      <v-navigation-drawer
+        v-model="drawer"
+      >
+        <v-list>
+          <v-list-item
+            v-for="id in translatableItemIds"
+            :active="id === selected"
+            @click="selected = id"
+          >
+            <v-list-item-title>{{ id }}</v-list-item-title>
+          </v-list-item>
+        </v-list>
+      </v-navigation-drawer>
+      <div v-if="!drawer">
+        <v-btn
+          variant="plain"
+          @click="drawer = true"
+        >
+          DRAWER!!!!!!!!
+        </v-btn>
+      </div>
+      <TranslatableTargets
+        v-if="selected"
+        :key="selected"
+        :translatableItemId="selected"
+      />
+    </v-main>
+  </v-app>
 </template>
 
 <style scoped>
