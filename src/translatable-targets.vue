@@ -10,7 +10,6 @@
 
   const languages = ref(['en-us', 'fr', 'es', 'zh-cn'])
   const id = props.translatableItemId
-  const currentEditTranslation = ref(null)
   const headers = ref([])
   const items = ref([])
   const editing = ref(false)
@@ -97,23 +96,26 @@
 </script>
 
 <template>
-  <v-container>
-    <v-autocomplete
-      v-model="languages"
-      label="Select languages to show"
-      variant="solo-filled"
-      multiple
-      chips
-      closable-chips
-      :items="languageCodes.map(({ code, name }) => ({ title: name, subtitle: code, value: code }))"
-    />
-    <v-switch
-      v-model="editing"
-      color="primary"
-      :label="editing ? 'Editing' : 'Edit'"
-    />
+  <v-container class="fill-height d-flex flex-column">
+    <v-container class="flex-grow-0">
+      <v-autocomplete
+        v-model="languages"
+        label="Select languages to show"
+        variant="solo-filled"
+        multiple
+        chips
+        closable-chips
+        :items="languageCodes.map(({ code, name }) => ({ title: name, subtitle: code, value: code }))"
+      />
+      <v-switch
+        v-model="editing"
+        color="primary"
+        :label="editing ? 'Editing' : 'Edit'"
+      />
+    </v-container>
     <v-data-table
       sticky
+      class="flex-grow-1"
       :headers="headers"
       :items="items"
       show-slect
