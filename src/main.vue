@@ -1,6 +1,7 @@
 <script setup>
   import { ref } from 'vue'
   import TranslatableTargets from './translatable-targets.vue'
+  import ContentReference from'./content-reference.vue'
 
   const translatableItems = await Agent.query('translatable-items')
   const translatableItemIds = translatableItems.map(i => i.translatable_item)
@@ -21,7 +22,9 @@
             :active="id === selected"
             @click="selected = id"
           >
-            <v-list-item-title>{{ id }}</v-list-item-title>
+            <v-list-item-title>
+              <ContentReference :id="id" />
+            </v-list-item-title>
           </v-list-item>
         </v-list>
       </v-navigation-drawer>
