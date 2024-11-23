@@ -131,19 +131,24 @@
   }
 
   function getAllPaths(obj, currentPath = []) {
-    let paths = [];
+    const paths = []
+    if (typeof obj !== "object" || obj === null) {
+      paths.push(currentPath)
+      return paths
+    }
+
+    if (Array.isArray(obj)) {
+      obj.forEach((element, index) => {
+        paths.push(
+          ...getAllPaths(element, [...currentPath, index])
+        )
+      })
+      return paths
+    }
 
     for (const key in obj) {
-        const newPath = [...currentPath, key]
-        if (Array.isArray(obj[key])) {
-            obj[key].forEach((_, index) => {
-                paths.push(...getAllPaths(obj[key][index], [...newPath, index]))
-            });
-        }
-        else if (typeof obj[key] === "object" && obj[key] !== null) {
-            paths.push(...getAllPaths(obj[key], newPath));
-        }
-        else paths.push(newPath)
+      const newPath = [...currentPath, key]
+      paths.push(...getAllPaths(obj[key], newPath))
     }
 
     return paths
