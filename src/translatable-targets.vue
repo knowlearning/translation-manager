@@ -1,8 +1,11 @@
 <script setup>
   import { reactive, ref, watch } from 'vue'
+  import JSONEditor from './json-editor.vue'
   import languageCodes from './language-codes.js'
 
   const TRANSLATION_DOMAIN = 'f74e9cb3-2b53-4c85-9b0c-f1d61b032b3f.localhost:5889'
+  const CURRENT_DOMAIN = window.location.host
+  const { auth: { user: CURRENT_USER } } = await Agent.environment()
 
   const props = defineProps({
     translatableItemId: String
@@ -15,6 +18,19 @@
   const editing = ref(false)
   const edits = reactive({})
   const openEditor = ref(null)
+  const editingSource = ref(false)
+  const itemMd = ref(null)
+  const itemState = ref(null)
+
+  Agent
+    .metadata(id)
+    .then(async md => {
+      if (md.domain === CURRENT_DOMAIN && md.owner === CURRENT_USER) {
+        itemState.value = await Agent.state(id)
+      }
+      itemMd.value = md
+    })
+    .catch(() => {})
 
   await loadTranslations()
 
@@ -56,14 +72,8 @@
     console.log(t)
 
     headers.value = [
-      {
-        title: 'path', //  TODO: every path element should get its header
-        key: 'path'
-      },
-      {
-        title: `${sourceLanguage} (source)`,
-        key: 'source'
-      },
+      { title: 'path', key: 'path' },
+      { title: `${sourceLanguage} (source)`, key: 'source' },
       ...languages
         .value
         .filter(language => language !== 'source' && language !== sourceLanguage)
@@ -93,6 +103,20 @@
     openEditor.value = null
   }
 
+  async function updateSource(jsonObject) {
+    const sourceState = itemState.value
+    const translations = JSON.parse(JSON.stringify(sourceState.translations))
+    Object
+      .keys(sourceState)
+      .filter(key => jsonObject[key] === undefined)
+      .forEach(key => delete sourceState[key])
+
+    Object.assign(sourceState, {...jsonObject, translations })
+    console.log(sourceState)
+
+    // TODO: ensure new paths are added to translations!
+  }
+
 </script>
 
 <template>
@@ -112,8 +136,30 @@
         color="primary"
         :label="editing ? 'Editing' : 'Edit'"
       />
+      <v-btn
+        v-if="
+          editing
+          && !editingSource
+          && itemMd
+          && itemMd.domain === CURRENT_DOMAIN
+          && itemMd.owner === CURRENT_USER
+        "
+        @click="editingSource = true"
+        text="Edit Source"
+      />
     </v-container>
+    <JSONEditor
+      v-if="
+        itemMd.domain === CURRENT_DOMAIN
+        && itemMd.owner === CURRENT_USER
+      "
+      v-show="editing && editingSource"
+      @save="updateSource"
+      @cancel="editingSource = false"
+      :jsonObject="itemState"
+    />
     <v-data-table
+      v-if="!editingSource"
       sticky
       class="flex-grow-1"
       :headers="headers"
