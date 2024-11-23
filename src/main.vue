@@ -1,13 +1,31 @@
 <script setup>
-  import { ref } from 'vue'
+  import { ref, reactive } from 'vue'
   import TranslatableTargets from './translatable-targets.vue'
   import ContentReference from'./content-reference.vue'
 
   const translatableItems = await Agent.query('translatable-items')
-  const translatableItemIds = translatableItems.map(i => i.translatable_item)
+  const translatableItemIds = reactive(translatableItems.map(i => i.translatable_item))
 
   const selected = ref(null)
   const drawer = ref(true)
+
+  async function createNewItem() {
+    const id = Agent.uuid()
+    const state = await Agent.state(id)
+    state.name = 'Wooo?'
+    state.translations = {
+      source_language: 'en-us',
+      paths: [
+        ['name']
+      ]
+    }
+    selected.value = id
+    translatableItemIds.unshift(id)
+  }
+
+  function logOut() {
+    Agent.logout()
+  }
 </script>
 
 <template>
@@ -16,6 +34,30 @@
       <v-navigation-drawer
         v-model="drawer"
       >
+        <v-toolbar>
+          <v-menu location="bottom">
+            <template v-slot:activator="slot">
+              <v-btn
+                variant="plain"
+                icon="fa-solid fa-user"
+                v-bind="slot.props"
+              />
+            </template>
+            <v-list>
+              <v-list-item
+                title="Log Out"
+                prepend-icon="fa-solid fa-sign-out"
+                @click="logOut()"
+              />
+            </v-list>
+          </v-menu>
+          <v-spacer />
+          <v-btn
+            variant="plain"
+            icon="fa-regular fa-pen-to-square"
+            @click="createNewItem"
+          />
+        </v-toolbar>
         <v-list>
           <v-list-item
             v-for="id in translatableItemIds"
@@ -23,7 +65,10 @@
             @click="selected = id"
           >
             <v-list-item-title>
-              <ContentReference :id="id" />
+              <ContentReference
+                :key="id"
+                :id="id"
+              />
             </v-list-item-title>
           </v-list-item>
         </v-list>
