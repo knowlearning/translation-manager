@@ -1,10 +1,9 @@
 <script setup>
-  import Main from './main.vue'
 </script>
 
 <template>
   <Suspense>
-    <Main />
+    <router-view></router-view>
   </Suspense>
 </template>
 

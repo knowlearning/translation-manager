@@ -2,11 +2,15 @@
   import { ref, reactive } from 'vue'
   import TranslatableTargets from './translatable-targets.vue'
   import ContentReference from'./content-reference.vue'
+  import { useRouter } from 'vue-router'
 
+  const router = useRouter()
   const translatableItems = await Agent.query('translatable-items')
   const translatableItemIds = reactive(translatableItems.map(i => i.translatable_item))
 
-  const selected = ref(null)
+  console.log('ROUTER PARAMS', router.currentRoute?.value?.params)
+
+  const selected = ref(router.currentRoute?.value?.params?.translatableItemId)
   const drawer = ref(true)
   const env = await Agent.environment()
 
@@ -53,7 +57,10 @@ function logIn() {
           <v-list-item
             v-for="id in translatableItemIds"
             :active="id === selected"
-            @click="selected = id"
+            @click="() => {
+              selected = id
+              router.push(`/${id}`)
+            }"
           >
             <v-list-item-title>
               <ContentReference

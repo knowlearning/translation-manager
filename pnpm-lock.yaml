@@ -20,6 +20,9 @@ importers:
       vue:
         specifier: ^3.5.12
         version: 3.5.12
+      vue-router:
+        specifier: ^4.4.5
+        version: 4.4.5(vue@3.5.12)
       vuetify:
         specifier: ^3.7.4
         version: 3.7.4(vue@3.5.12)
@@ -421,6 +424,11 @@ packages:
       terser:
         optional: true
 
+  vue-router@4.4.5:
+    resolution: {integrity: sha512-4fKZygS8cH1yCyuabAXGUAsyi1b2/o/OKgu/RUb+znIYOxPRxdkytJEx+0wGcpBE1pX6vUgh5jwWOKRGvuA/7Q==}
+    peerDependencies:
+      vue: ^3.2.0
+
   vue@3.5.12:
     resolution: {integrity: sha512-CLVZtXtn2ItBIi/zHZ0Sg1Xkb7+PU32bJJ8Bmy7ts3jxXTcbfsEfBivFYYWz1Hur+lalqGAh65Coin0r+HRUfg==}
     peerDependencies:
@@ -759,6 +767,11 @@ snapshots:
       rollup: 4.24.4
     optionalDependencies:
       fsevents: 2.3.3
+
+  vue-router@4.4.5(vue@3.5.12):
+    dependencies:
+      '@vue/devtools-api': 6.6.4
+      vue: 3.5.12
 
   vue@3.5.12:
     dependencies:

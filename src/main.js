@@ -1,5 +1,7 @@
 import { createApp } from 'vue'
+import { createRouter, createWebHistory } from 'vue-router'
 import App from './App.vue'
+import Main from './main.vue'
 import Agent from '@knowlearning/agents'
 
 import { createVuetify } from 'vuetify'
@@ -13,6 +15,14 @@ import '@fortawesome/fontawesome-free/css/all.css'
 import './style.css'
 
 window.Agent = Agent
+
+const router = createRouter({
+  history: createWebHistory(),
+  routes: [
+    { path: '/', component: Main },
+    { path: '/:translatableItemId', component: Main }
+  ]
+})
 
 const vuetify = createVuetify({
     components,
@@ -32,5 +42,6 @@ const vuetify = createVuetify({
   
 
 createApp(App)
+  .use(router)
   .use(vuetify)
   .mount('#app')
