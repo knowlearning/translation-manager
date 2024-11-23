@@ -42,22 +42,6 @@ function logIn() {
         v-model="drawer"
       >
         <v-toolbar>
-          <v-menu location="bottom">
-            <template v-slot:activator="slot">
-              <v-btn
-                variant="plain"
-                icon="fa-solid fa-user"
-                v-bind="slot.props"
-              />
-            </template>
-            <v-list>
-              <v-list-item
-                title="Log Out"
-                prepend-icon="fa-solid fa-sign-out"
-                @click="logOut()"
-              />
-            </v-list>
-          </v-menu>
           <v-spacer />
           <v-btn
             variant="plain"
@@ -89,6 +73,24 @@ function logIn() {
             :icon="drawer ? 'fa-solid fa-chevron-left' : 'fa-solid fa-bars'"
             @click="drawer = !drawer"
           />
+        </template>
+        <template v-slot:append>
+          <v-menu location="bottom">
+            <template v-slot:activator="slot">
+              <v-avatar
+                class="mr-2"
+                :image="env.auth.info.picture"
+                v-bind="slot.props"
+              />
+            </template>
+            <v-list>
+              <v-list-item
+                title="Log Out"
+                prepend-icon="fa-solid fa-sign-out"
+                @click="logOut()"
+              />
+            </v-list>
+          </v-menu>
         </template>
       </v-app-bar>
       <TranslatableTargets

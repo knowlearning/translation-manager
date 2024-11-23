@@ -197,10 +197,11 @@
     />
     <v-data-table
       v-if="!editingSource"
-      sticky
       class="flex-grow-1"
       :headers="headers"
       :items="items"
+      :items-per-page="-1"
+      hide-default-footer
       show-slect
     >
       <template v-slot:item.path="{ value }">
