@@ -105,16 +105,48 @@
 
   async function updateSource(jsonObject) {
     const sourceState = itemState.value
-    const translations = JSON.parse(JSON.stringify(sourceState.translations))
+    const { source_language } = JSON.parse(JSON.stringify(sourceState.translations))
     Object
       .keys(sourceState)
       .filter(key => jsonObject[key] === undefined)
       .forEach(key => delete sourceState[key])
 
-    Object.assign(sourceState, {...jsonObject, translations })
+    const paths = getAllPaths(jsonObject)
+
+    Object
+      .assign(
+        sourceState,
+        {
+          ...jsonObject,
+          translations: {
+            source_language,
+            paths
+          }
+        }
+      )
     console.log(sourceState)
 
-    // TODO: ensure new paths are added to translations!
+    editingSource.value = false
+    await loadTranslations()
+  }
+
+  function getAllPaths(obj, currentPath = []) {
+    let paths = [];
+
+    for (const key in obj) {
+        const newPath = [...currentPath, key]
+        if (Array.isArray(obj[key])) {
+            obj[key].forEach((_, index) => {
+                paths.push(...getAllPaths(obj[key][index], [...newPath, index]))
+            });
+        }
+        else if (typeof obj[key] === "object" && obj[key] !== null) {
+            paths.push(...getAllPaths(obj[key], newPath));
+        }
+        else paths.push(newPath)
+    }
+
+    return paths
   }
 
 </script>

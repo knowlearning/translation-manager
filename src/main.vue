@@ -8,6 +8,9 @@
 
   const selected = ref(null)
   const drawer = ref(true)
+  const env = await Agent.environment()
+
+  const loggedIn = env.auth.provider !== 'anonymous'
 
   async function createNewItem() {
     const id = Agent.uuid()
@@ -23,13 +26,17 @@
     translatableItemIds.unshift(id)
   }
 
-  function logOut() {
-    Agent.logout()
-  }
+function logOut() {
+  Agent.logout()
+}
+
+function logIn() {
+  Agent.login()
+}
 </script>
 
 <template>
-  <v-app>
+  <v-app v-if="loggedIn">
     <v-main>
       <v-navigation-drawer
         v-model="drawer"
@@ -90,6 +97,12 @@
         :translatableItemId="selected"
       />
     </v-main>
+  </v-app>
+  <v-app v-else>
+    <v-btn
+      text="Log in"
+      @click="logIn"
+    />
   </v-app>
 </template>
 
