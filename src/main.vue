@@ -3,10 +3,13 @@
   import TranslatableTargets from './translatable-targets.vue'
   import ContentReference from'./content-reference.vue'
   import { useRouter } from 'vue-router'
+  import languageCodes from './language-codes.js'
 
   const router = useRouter()
   const translatableItems = await Agent.query('translatable-items')
   const translatableItemIds = reactive(translatableItems.map(i => i.translatable_item))
+  const editing = ref(false)
+  const languages = ref(['en-us', 'fr', 'es', 'zh-cn'])
 
   console.log('ROUTER PARAMS', router.currentRoute?.value?.params)
 
@@ -45,14 +48,58 @@ function logIn() {
       <v-navigation-drawer
         v-model="drawer"
       >
-        <v-toolbar>
-          <v-spacer />
-          <v-btn
-            variant="plain"
-            icon="fa-regular fa-pen-to-square"
-            @click="createNewItem"
-          />
-        </v-toolbar>
+        <template v-slot:prepend>
+          <v-toolbar>
+            <v-menu location="bottom">
+              <template v-slot:activator="slot">
+                <v-btn
+                  class="mr-2"
+                  icon="fa-solid fa-gear"
+                  v-bind="slot.props"
+                />
+              </template>
+                <v-list>
+                  <v-dialog
+                    max-width="700"
+                    style="
+                      margin-top: 32px !important;
+                      align-items: flex-start !important;
+                    "
+                  >
+                    <template v-slot:activator="{ props: activatorProps }">
+                      <v-list-item
+                        title="Select Languages"
+                        prepend-icon="fa-solid fa-language"
+                        v-bind="activatorProps"
+                      />
+                    </template>
+                    <template v-slot:default="{ isActive }">
+                      <v-autocomplete
+                        v-model="languages"
+                        label="Select languages to show"
+                        variant="solo"
+                        multiple
+                        chips
+                        closable-chips
+                        :items="languageCodes.map(({ code, name }) => ({ title: name, subtitle: code, value: code }))"
+                      />
+                    </template>
+                  </v-dialog>
+                  <v-list-item
+                    title="Log Out"
+                    prepend-icon="fa-solid fa-sign-out"
+                    @click="logOut()"
+                  />
+                </v-list>
+            </v-menu>
+            <v-spacer />
+            <v-btn
+              variant="plain"
+              icon="fa-regular fa-pen-to-square"
+              @click="createNewItem"
+            />
+          </v-toolbar>
+        </template>
         <v-list>
           <v-list-item
             v-for="id in translatableItemIds"
@@ -82,28 +129,25 @@ function logIn() {
           />
         </template>
         <template v-slot:append>
-          <v-menu location="bottom">
-            <template v-slot:activator="slot">
-              <v-avatar
-                class="mr-2"
-                :image="env.auth.info.picture"
-                v-bind="slot.props"
-              />
-            </template>
-            <v-list>
-              <v-list-item
-                title="Log Out"
-                prepend-icon="fa-solid fa-sign-out"
-                @click="logOut()"
-              />
-            </v-list>
-          </v-menu>
+          <v-switch
+            class="mr-4"
+            v-model="editing"
+            color="primary"
+            hide-details
+            label="edit"
+          />
+          <v-avatar
+            class="mr-2"
+            :image="env.auth.info.picture"
+          />
         </template>
       </v-app-bar>
       <TranslatableTargets
         v-if="selected"
         :key="selected"
+        :editing="editing"
         :translatableItemId="selected"
+        :languages="languages"
       />
     </v-main>
   </v-app>

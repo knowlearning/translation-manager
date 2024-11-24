@@ -1,21 +1,20 @@
 <script setup>
   import { reactive, ref, watch } from 'vue'
   import JSONEditor from './json-editor.vue'
-  import languageCodes from './language-codes.js'
 
   const TRANSLATION_DOMAIN = 'f74e9cb3-2b53-4c85-9b0c-f1d61b032b3f.localhost:5889'
   const CURRENT_DOMAIN = window.location.host
   const { auth: { user: CURRENT_USER } } = await Agent.environment()
 
   const props = defineProps({
-    translatableItemId: String
+    translatableItemId: String,
+    languages: Array,
+    editing: Boolean
   })
 
-  const languages = ref(['en-us', 'fr', 'es', 'zh-cn'])
   const id = props.translatableItemId
   const headers = ref([])
   const items = ref([])
-  const editing = ref(false)
   const edits = reactive({})
   const openEditor = ref(null)
   const editingSource = ref(false)
@@ -35,15 +34,15 @@
   await loadTranslations()
 
   watch(
-    () => languages.value,
+    () => props.languages,
     () => loadTranslations()
   )
 
   async function loadTranslations() {
-    const translations = await Agent.query('translations-for-item', [id, languages.value], TRANSLATION_DOMAIN)
+    const translations = await Agent.query('translations-for-item', [id, props.languages], TRANSLATION_DOMAIN)
 
     console.log('translations-for-item', translations)
-    const languagePlaceholders = Object.fromEntries(languages.value.map(k => [k, null]))
+    const languagePlaceholders = Object.fromEntries(props.languages.map(k => [k, null]))
 
     let sourceLanguage
 
@@ -74,8 +73,8 @@
     headers.value = [
       { title: 'path', key: 'path' },
       { title: `${sourceLanguage} (source)`, key: 'source' },
-      ...languages
-        .value
+      ...props
+        .languages
         .filter(language => language !== 'source' && language !== sourceLanguage)
         .map(language => ({
           title: language,
@@ -157,47 +156,32 @@
 </script>
 
 <template>
-  <v-container class="fill-height d-flex flex-column">
-    <v-container class="flex-grow-0">
-      <v-autocomplete
-        v-model="languages"
-        label="Select languages to show"
-        variant="solo-filled"
-        multiple
-        chips
-        closable-chips
-        :items="languageCodes.map(({ code, name }) => ({ title: name, subtitle: code, value: code }))"
-      />
-      <v-switch
-        v-model="editing"
-        color="primary"
-        :label="editing ? 'Editing' : 'Edit'"
-      />
-      <v-btn
-        v-if="
-          editing
-          && !editingSource
-          && itemMd
-          && itemMd.domain === CURRENT_DOMAIN
-          && itemMd.owner === CURRENT_USER
-        "
-        @click="editingSource = true"
-        text="Edit Source"
-      />
-    </v-container>
+  <v-container>
+    <v-btn
+      v-if="
+        props.editing
+        && !editingSource
+        && itemMd
+        && itemMd.domain === CURRENT_DOMAIN
+        && itemMd.owner === CURRENT_USER
+      "
+      @click="editingSource = true"
+      text="Edit Source"
+    />
+  </v-container>
+  <v-container>
     <JSONEditor
       v-if="
         itemMd.domain === CURRENT_DOMAIN
         && itemMd.owner === CURRENT_USER
       "
-      v-show="editing && editingSource"
+      v-show="props.editing && editingSource"
       @save="updateSource"
       @cancel="editingSource = false"
       :jsonObject="itemState"
     />
     <v-data-table
       v-if="!editingSource"
-      class="flex-grow-1"
       :headers="headers"
       :items="items"
       :items-per-page="-1"
@@ -211,11 +195,11 @@
         {{ value }}
       </template>
       <template
-        v-for="language in languages"
+        v-for="language in props.languages"
         v-slot:[`item.${language}`]="{ value, item }"
       >
         <div
-          v-if="editing && openEditor === editKey(item, language)"
+          v-if="props.editing && openEditor === editKey(item, language)"
         >
           <v-textarea
             variant="outlined"
@@ -238,7 +222,7 @@
         <div v-else>
           {{ value }}
           <v-btn
-            v-if="editing && !openEditor"
+            v-if="props.editing && !openEditor"
             variant="plain"
             size="x-small"
             icon="fa fa-pencil"
@@ -253,3 +237,6 @@
     </v-data-table>
   </v-container>
 </template>
+
+<style>
+</style>
