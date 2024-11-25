@@ -49,7 +49,9 @@ function logIn() {
         v-model="drawer"
       >
         <template v-slot:prepend>
-          <v-toolbar>
+          <v-toolbar
+            color="primary"
+          >
             <v-menu location="bottom">
               <template v-slot:activator="slot">
                 <v-btn
