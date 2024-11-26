@@ -6,19 +6,20 @@
   import languageCodes from './language-codes.js'
 
   const router = useRouter()
-  const domain = ref(window.location.host)
+  const selected = ref(router.currentRoute?.value?.params?.translatableItemId)
+  const drawer = ref(true)
+  const env = await Agent.environment()
+  const domain = ref(
+    selected.value ?
+      await Agent.metadata(selected.value).then(md => md.domain)
+      : window.location.host
+  )
   const translatableItems = await Agent.query('translatable-items', [domain.value])
   const translatableItemIds = reactive(translatableItems.map(i => i.translatable_item))
   const editing = ref(false)
   const domainEntry = ref(window.location.host)
   const domains = reactive([window.location.host])
   const languages = ref(['en-us', 'fr', 'es', 'zh-cn'])
-
-  console.log('ROUTER PARAMS', router.currentRoute?.value?.params)
-
-  const selected = ref(router.currentRoute?.value?.params?.translatableItemId)
-  const drawer = ref(true)
-  const env = await Agent.environment()
 
   const loggedIn = env.auth.provider !== 'anonymous'
 
