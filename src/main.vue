@@ -1,12 +1,12 @@
 <script setup>
-  import { ref, watch, reactive } from 'vue'
+  import { ref, watch, reactive, computed } from 'vue'
   import TranslatableTargets from './translatable-targets.vue'
   import ContentReference from'./content-reference.vue'
   import { useRouter } from 'vue-router'
   import languageCodes from './language-codes.js'
 
   const router = useRouter()
-  const selected = ref(router.currentRoute?.value?.params?.translatableItemId)
+  const selected = computed(() => router.currentRoute?.value?.params?.translatableItemId)
   const drawer = ref(true)
   const env = await Agent.environment()
   const domain = ref(
