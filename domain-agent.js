@@ -27,8 +27,7 @@
             })
         )
       }
-      else if (patch.find(({ path }) => path[0] === 'translations')) {
-        Agent.log('TRANSLATIONS PATCH', scope, patch, id)
+      else if (await isTranslatableItem(id)) {
         await handleTranslatableItem(id)
       }
     })
@@ -89,4 +88,10 @@
         )
       }
     })
+  }
+
+  async function isTranslatableItem(id) {
+    const state = await Agent.state(id)
+    //  TODO: validate schema
+    return !!state.translations
   }
