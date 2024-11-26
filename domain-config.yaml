@@ -123,13 +123,13 @@ postgres:
           SELECT
             t.id,
             t.language,
-            t.value,
-            lp.priority
+            t.value
           FROM translations t
-          JOIN unnest($2::text[]) WITH ORDINALITY lp(language, priority)
-            ON t.language = lp.language
           WHERE t.translatable_target = translatable_targets.id
-          ORDER BY lp.priority
+            AND (
+              t.language = ANY($2)
+              OR t.language = translatable_targets.source_language
+            )
         ) translations ON true
         LEFT JOIN metadata translation_md ON translation_md.id = translations.id
           AND translation_md.owner = $DOMAIN
