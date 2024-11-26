@@ -1,18 +1,18 @@
 <script setup>
-  import { ref, reactive } from 'vue'
+  import { ref, watch, reactive } from 'vue'
   import TranslatableTargets from './translatable-targets.vue'
   import ContentReference from'./content-reference.vue'
   import { useRouter } from 'vue-router'
   import languageCodes from './language-codes.js'
 
   const router = useRouter()
-  const translatableItems = await Agent.query('translatable-items')
+  const domain = ref(window.location.host)
+  const translatableItems = await Agent.query('translatable-items', [domain.value])
   const translatableItemIds = reactive(translatableItems.map(i => i.translatable_item))
   const editing = ref(false)
   const domainEntry = ref(window.location.host)
   const domains = reactive([window.location.host])
   const languages = ref(['en-us', 'fr', 'es', 'zh-cn'])
-  const domain = ref(window.location.host)
 
   console.log('ROUTER PARAMS', router.currentRoute?.value?.params)
 
@@ -35,6 +35,14 @@
     selected.value = id
     translatableItemIds.unshift(id)
   }
+
+  watch(() => domain.value, async () => {
+    const translatableItems = await Agent.query('translatable-items', [domain.value])
+    console.log('translatable items', translatableItems)
+    translatableItemIds.splice(0, translatableItemIds.length)
+    translatableItemIds.push(...translatableItems.map(i => i.translatable_item))
+    router.push('/')
+  })
 
   async function addDomain(e) {
     const d = domainEntry.value.trim()

@@ -48,7 +48,15 @@ postgres:
     translatable-items: |
       SELECT DISTINCT (path->0) AS translatable_item
       FROM translatable_targets
+      JOIN metadata ON metadata.id = translatable_targets.id
       WHERE jsonb_typeof(path) = 'array'
+        AND (
+          metadata.owner = $1
+          OR (
+            metadata.domain = $DOMAIN
+            AND $1 = $DOMAIN
+          )
+        )
     translate-item:
       domains:
       - f74e9cb3-2b53-4c85-9b0c-f1d61b032b3f.localhost:5888
