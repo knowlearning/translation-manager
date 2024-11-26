@@ -9,7 +9,10 @@
   const translatableItems = await Agent.query('translatable-items')
   const translatableItemIds = reactive(translatableItems.map(i => i.translatable_item))
   const editing = ref(false)
+  const domainEntry = ref(window.location.host)
+  const domains = reactive([window.location.host])
   const languages = ref(['en-us', 'fr', 'es', 'zh-cn'])
+  const domain = ref(window.location.host)
 
   console.log('ROUTER PARAMS', router.currentRoute?.value?.params)
 
@@ -31,6 +34,21 @@
     }
     selected.value = id
     translatableItemIds.unshift(id)
+  }
+
+  async function addDomain(e) {
+    const d = domainEntry.value.trim()
+    // TODO: verfiy domain name
+
+    if (!domains.includes(d)) domains.push(d)
+
+    domain.value = d
+  }
+
+  function addDomainOnUpdate() {
+    const d = domainEntry.value
+
+    if (domains.includes(d)) domain.value = d
   }
 
 function logOut() {
@@ -77,6 +95,8 @@ function logIn() {
                     </template>
                     <template v-slot:default="{ isActive }">
                       <v-autocomplete
+                        v-if="isActive"
+                        autofocus
                         v-model="languages"
                         label="Select languages to show"
                         variant="solo"
@@ -84,6 +104,33 @@ function logIn() {
                         chips
                         closable-chips
                         :items="languageCodes.map(({ code, name }) => ({ title: name, subtitle: code, value: code }))"
+                      />
+                    </template>
+                  </v-dialog>
+                  <v-dialog
+                    max-width="700"
+                    style="
+                      margin-top: 32px !important;
+                      align-items: flex-start !important;
+                    "
+                  >
+                    <template v-slot:activator="{ props: activatorProps }">
+                      <v-list-item
+                        title="Change Domain"
+                        prepend-icon="fa-solid fa-globe"
+                        v-bind="activatorProps"
+                      />
+                    </template>
+                    <template v-slot:default="{ isActive }">
+                      <v-combobox
+                        v-if="isActive"
+                        autofocus
+                        v-model="domainEntry"
+                        label="Select Domain or Enter a New One"
+                        variant="solo"
+                        :items="domains"
+                        @keydown.enter="addDomain"
+                        @update:modelValue="addDomainOnUpdate"
                       />
                     </template>
                   </v-dialog>
@@ -129,6 +176,9 @@ function logIn() {
             :icon="drawer ? 'fa-solid fa-chevron-left' : 'fa-solid fa-bars'"
             @click="drawer = !drawer"
           />
+        </template>
+        <template v-slot:title>
+          {{ domain }}
         </template>
         <template v-slot:append>
           <v-switch
