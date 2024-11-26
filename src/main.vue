@@ -19,7 +19,7 @@
   const editing = ref(false)
   const domainEntry = ref(window.location.host)
   const domains = reactive([window.location.host])
-  const languages = ref(['en-us', 'fr', 'es', 'zh-cn'])
+  const languages = ref([])
 
   const loggedIn = env.auth.provider !== 'anonymous'
 
