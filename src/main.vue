@@ -7,19 +7,30 @@
 
   const router = useRouter()
   const selected = computed(() => router.currentRoute?.value?.params?.translatableItemId)
+
+  const [
+    env,
+    appStateNonReactive,
+    itemDomain,
+  ] = await Promise.all([
+    Agent.environment(),
+    Agent.state('app'),
+    selected.value ? Agent.metadata(selected.value).then(md => md.domain) : window.location.host
+  ])
+
+
+  if (!appStateNonReactive.domains  ) appStateNonReactive.domains   = [window.location.host]
+  if (!appStateNonReactive.languages) appStateNonReactive.languages = []
+
+  const appState = reactive(appStateNonReactive)
+  const domain = ref(itemDomain)
   const drawer = ref(true)
-  const env = await Agent.environment()
-  const domain = ref(
-    selected.value ?
-      await Agent.metadata(selected.value).then(md => md.domain)
-      : window.location.host
-  )
   const translatableItems = await Agent.query('translatable-items', [domain.value])
   const translatableItemIds = reactive(translatableItems.map(i => i.translatable_item))
   const editing = ref(false)
   const domainEntry = ref(window.location.host)
-  const domains = reactive([window.location.host])
-  const languages = ref([])
+
+  console.log(appState.languages)
 
   const loggedIn = env.auth.provider !== 'anonymous'
 
@@ -45,11 +56,15 @@
     router.push('/')
   })
 
+  watch(() => appState.languages, () => {
+    console.log(appState.languages)
+  })
+
   async function addDomain(e) {
     const d = domainEntry.value.trim()
     // TODO: verfiy domain name
 
-    if (!domains.includes(d)) domains.push(d)
+    if (!appState.domains.includes(d)) appState.domains.push(d)
 
     domain.value = d
   }
@@ -57,16 +72,18 @@
   function addDomainOnUpdate() {
     const d = domainEntry.value
 
-    if (domains.includes(d)) domain.value = d
+    if (appState.domains.includes(d)) domain.value = d
   }
 
-function logOut() {
-  Agent.logout()
-}
+  function logOut() {
+    Agent.logout()
+  }
 
-function logIn() {
-  Agent.login()
-}
+  function logIn() {
+    Agent.login()
+  }
+
+  window.appState = appState
 </script>
 
 <template>
@@ -106,7 +123,7 @@ function logIn() {
                       <v-autocomplete
                         v-if="isActive"
                         autofocus
-                        v-model="languages"
+                        v-model="appState.languages"
                         label="Select languages to show"
                         variant="solo"
                         multiple
@@ -137,7 +154,7 @@ function logIn() {
                         v-model="domainEntry"
                         label="Select Domain or Enter a New One"
                         variant="solo"
-                        :items="domains"
+                        :items="appState.domains"
                         @keydown.enter="addDomain"
                         @update:modelValue="addDomainOnUpdate"
                       />
@@ -208,7 +225,7 @@ function logIn() {
         :key="selected"
         :editing="editing"
         :translatableItemId="selected"
-        :languages="languages"
+        :languages="appState.languages"
       />
     </v-main>
   </v-app>
