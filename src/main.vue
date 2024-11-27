@@ -83,6 +83,12 @@
     Agent.login()
   }
 
+  function removeDomain(domain) {
+    const index = appState.domains.indexOf(domain)
+    console.log(index)
+    if (index > -1) appState.domains.splice(index, 1)
+  }
+
   window.appState = appState
 </script>
 
@@ -157,7 +163,22 @@
                         :items="appState.domains"
                         @keydown.enter="addDomain"
                         @update:modelValue="addDomainOnUpdate"
-                      />
+                      >
+                        <template v-slot:item="{ props, item }">
+                          <v-list-item
+                            v-bind="props"
+                            :title="item.value"
+                          >
+                            <template v-slot:append>
+                              <v-btn
+                                @click.stop="removeDomain(item.value)"
+                                variant="plain"
+                                icon="fa-solid fa-close"
+                              />
+                            </template>
+                          </v-list-item>
+                        </template>
+                      </v-combobox>
                     </template>
                   </v-dialog>
                   <v-list-item
