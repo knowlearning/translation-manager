@@ -9,7 +9,7 @@
 
     child.on('mutate', async ({ scope, id, patch }) => {
       if (scope.startsWith('translatable_target/')) {
-        //  TODO: validate user is a domain agent with rights to access
+        //  TODO: validate user is a domain agent with rights to set
         const  { source_language, source_string } = await Agent.state(id)
         await setTranslation(id, source_language, source_string)
       }
@@ -58,7 +58,7 @@
 
   async function handleTranslatableItem(id) {
     const itemState = await Agent.state(id)
-    itemState.translations.paths.forEach(async path => {
+    await Promise.all(itemState.translations.paths.map(async path => {
       const translatableTargetName = `translatable_target/${JSON.stringify([id, ...path])}`
       Agent.log('GETTING METADATA', translatableTargetName)
       const translatableTargetMetadata = await Agent.metadata(translatableTargetName)
@@ -87,7 +87,7 @@
           source_string
         )
       }
-    })
+    }))
   }
 
   async function isTranslatableItem(id) {
