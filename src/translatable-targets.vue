@@ -1,6 +1,5 @@
 <script setup>
   import { reactive, ref, watch } from 'vue'
-  import JSONEditor from './json-editor.vue'
 
   const TRANSLATION_DOMAIN = 'f74e9cb3-2b53-4c85-9b0c-f1d61b032b3f.localhost:5889'
   const CURRENT_DOMAIN = window.location.host
@@ -20,6 +19,9 @@
   const editingSource = ref(false)
   const itemMd = ref(null)
   const itemState = ref(null)
+  const addingNewSourceValue = ref(false)
+  const newSourceKey = ref('')
+  const newSourceValue= ref('')
 
   Agent
     .metadata(id)
@@ -153,41 +155,93 @@
     return paths
   }
 
+  function saveNewSource() {
+    // TODO: do not put new keys in translations
+    itemState.value[newSourceKey.value] = newSourceValue.value
+    itemState.value.translations.paths.push([newSourceKey.value])
+    loadTranslations()
+  }
+
 </script>
 
 <template>
   <v-container>
-    <v-btn
-      v-if="
-        props.editing
-        && !editingSource
-        && itemMd
-        && itemMd.domain === CURRENT_DOMAIN
-        && itemMd.owner === CURRENT_USER
-      "
-      @click="editingSource = true"
-      text="Edit Source"
-    />
-  </v-container>
-  <v-container>
-    <JSONEditor
-      v-if="
-        itemMd.domain === CURRENT_DOMAIN
-        && itemMd.owner === CURRENT_USER
-      "
-      v-show="props.editing && editingSource"
-      @save="updateSource"
-      @cancel="editingSource = false"
-      :jsonObject="itemState"
-    />
     <v-data-table
-      v-if="!editingSource"
       :headers="headers"
       :items="items"
       :items-per-page="-1"
       hide-default-footer
-      show-slect
     >
+      <template v-slot:body.prepend>
+        <tr
+          v-if="editing && items.length"
+          key="edit-row"
+        >
+          <td>
+            <v-text-field
+              v-if="addingNewSourceValue"
+              variant="outlined"
+              autofocus
+              auto-grow
+              hide-details
+              min-width="128px"
+              v-model="newSourceKey"
+              @keydown.shift.enter="saveNewSource"
+            />
+            <v-btn
+              v-else
+              variant="plain"
+              size="x-small"
+              icon="fa fa-pencil"
+              @click="() => {
+                addingNewSourceValue = true
+
+              }"
+            />
+          </td>
+          <td>
+            <v-textarea
+              v-if="addingNewSourceValue"
+              variant="outlined"
+              autofocus
+              auto-grow
+              rows="1"
+              v-model="newSourceValue"
+              hide-details
+              @keydown.shift.enter="saveNewSource"
+            />
+            <v-btn
+              v-else
+              variant="plain"
+              size="x-small"
+              icon="fa fa-pencil"
+              @click="() => {
+                addingNewSourceValue = true
+                openEditor = null
+              }"
+            />
+            <v-btn
+              v-if="addingNewSourceValue"
+              text="Save"
+              @click="() => {
+                addingNewSourceValue = false
+                saveNewSource()
+              }"
+            />
+            <v-btn
+              v-if="addingNewSourceValue"
+              text="Cancel"
+              @click="() => {
+                addingNewSourceValue = false
+              }"
+            />
+          </td>
+          <td
+            v-for="header in headers.slice(2)"
+          >
+          </td>
+        </tr>
+      </template>
       <template v-slot:item.path="{ value }">
         {{ value }}
       </template>
