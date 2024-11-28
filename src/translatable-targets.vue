@@ -174,7 +174,7 @@
     >
       <template v-slot:body.prepend>
         <tr
-          v-if="editing && items.length"
+          v-if="editing && itemState && items.length"
           key="edit-row"
         >
           <td>
@@ -195,7 +195,7 @@
               icon="fa fa-pencil"
               @click="() => {
                 addingNewSourceValue = true
-
+                openEditor = null
               }"
             />
           </td>
@@ -209,16 +209,6 @@
               v-model="newSourceValue"
               hide-details
               @keydown.shift.enter="saveNewSource"
-            />
-            <v-btn
-              v-else
-              variant="plain"
-              size="x-small"
-              icon="fa fa-pencil"
-              @click="() => {
-                addingNewSourceValue = true
-                openEditor = null
-              }"
             />
             <v-btn
               v-if="addingNewSourceValue"
@@ -260,6 +250,8 @@
             autofocus
             v-model="edits[editKey(item, language)]"
             @keydown.shift.enter="save(item, language)"
+            auto-grow
+            rows="1"
           />
           <v-btn
             text="compare"
@@ -284,6 +276,7 @@
               const key = editKey(item, language)
               openEditor = key
               edits[key] = edits[key] || value
+              addingNewSourceValue = false
             }"
           />
         </div>
