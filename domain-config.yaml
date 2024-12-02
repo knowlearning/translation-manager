@@ -18,6 +18,46 @@ postgres:
         language: TEXT
         value: TEXT
   functions:
+    iso_639_to_language_config:
+      returns: TEXT
+      language: PLpgSQL
+      body: |
+        BEGIN
+          RETURN CASE
+            WHEN ISO639Code LIKE 'ar%' THEN 'arabic'
+            WHEN ISO639Code LIKE 'hy%' THEN 'armenian'
+            WHEN ISO639Code LIKE 'eu%' THEN 'basque'
+            WHEN ISO639Code LIKE 'ca%' THEN 'catalan'
+            WHEN ISO639Code LIKE 'da%' THEN 'danish'
+            WHEN ISO639Code LIKE 'nl%' THEN 'dutch'
+            WHEN ISO639Code LIKE 'en%' THEN 'english'
+            WHEN ISO639Code LIKE 'fi%' THEN 'finnish'
+            WHEN ISO639Code LIKE 'fr%' THEN 'french'
+            WHEN ISO639Code LIKE 'de%' THEN 'german'
+            WHEN ISO639Code LIKE 'el%' THEN 'greek'
+            WHEN ISO639Code LIKE 'hi%' THEN 'hindi'
+            WHEN ISO639Code LIKE 'hu%' THEN 'hungarian'
+            WHEN ISO639Code LIKE 'id%' THEN 'indonesian'
+            WHEN ISO639Code LIKE 'ga%' THEN 'irish'
+            WHEN ISO639Code LIKE 'it%' THEN 'italian'
+            WHEN ISO639Code LIKE 'lt%' THEN 'lithuanian'
+            WHEN ISO639Code LIKE 'ne%' THEN 'nepali'
+            WHEN ISO639Code LIKE 'no%' THEN 'norwegian'
+            WHEN ISO639Code LIKE 'pt%' THEN 'portuguese'
+            WHEN ISO639Code LIKE 'ro%' THEN 'romanian'
+            WHEN ISO639Code LIKE 'ru%' THEN 'russian'
+            WHEN ISO639Code LIKE 'sr%' THEN 'serbian'
+            WHEN ISO639Code LIKE 'es%' THEN 'spanish'
+            WHEN ISO639Code LIKE 'sv%' THEN 'swedish'
+            WHEN ISO639Code LIKE 'ta%' THEN 'tamil'
+            WHEN ISO639Code LIKE 'tr%' THEN 'turkish'
+            WHEN ISO639Code LIKE 'yi%' THEN 'yiddish'
+            ELSE 'simple'
+          END;
+        END;
+      arguments:
+      - name: ISO639Code
+        type: TEXT
     same_domain_authorization:
       returns: BOOLEAN
       language: PLpgSQL
@@ -45,6 +85,11 @@ postgres:
       - name: requestedScope
         type: TEXT
   queries:
+    search-translations: |
+      SELECT *
+        FROM translations
+        WHERE to_tsvector(iso_639_to_language_config(language)::regconfig, value)
+              @@ plainto_tsquery(iso_639_to_language_config(language)::regconfig, $1)
     translatable-items: |
       SELECT DISTINCT (path->0) AS translatable_item
       FROM translatable_targets
