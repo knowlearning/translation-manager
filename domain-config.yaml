@@ -86,10 +86,19 @@ postgres:
         type: TEXT
   queries:
     search-translations: |
-      SELECT *
-        FROM translations
-        WHERE to_tsvector(iso_639_to_language_config(language)::regconfig, value)
-              @@ plainto_tsquery(iso_639_to_language_config(language)::regconfig, $1)
+      SELECT
+        translatable_targets.id AS translatable_target,
+        translatable_targets.source_language AS source_language,
+        translations.id AS translation,
+        translations.value AS match,
+        translations.language AS language
+      FROM translatable_targets
+      JOIN metadata target_md ON target_md.id = translatable_targets.id
+      JOIN translations ON translatable_targets.id = translations.translatable_target
+      WHERE
+        target_md.owner = $1
+        AND to_tsvector(iso_639_to_language_config(language)::regconfig, value)
+              @@ plainto_tsquery(iso_639_to_language_config(language)::regconfig, $2)
     translatable-items: |
       SELECT DISTINCT (path->0) AS translatable_item
       FROM translatable_targets
