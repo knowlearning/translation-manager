@@ -142,7 +142,7 @@
                         multiple
                         chips
                         closable-chips
-                        :items="languageCodes.map(({ code, name }) => ({ title: name, subtitle: code, value: code }))"
+                        :items="Object.entries(languageCodes).map(([ code, name ]) => ({ title: name, subtitle: code, value: code }))"
                       />
                     </template>
                   </v-dialog>
@@ -195,35 +195,6 @@
                   />
                 </v-list>
             </v-menu>
-            <v-dialog
-              max-width="700"
-              style="
-                margin-top: 32px !important;
-                align-items: flex-start !important;
-              "
-            >
-              <template v-slot:activator="{ props: activatorProps }">
-                <v-btn
-                  icon="fa-solid fa-search"
-                  v-bind="activatorProps"
-                />
-              </template>
-              <template v-slot:default="{ isActive }">
-                <v-text-field
-                  variant="solo"
-                  autofocus
-                  clearable
-                  v-model="search"
-                  @keypress.enter="fetchSearchResults(search)"
-                >
-                  <template v-slot:append-inner>
-                    <v-btn
-                      text="Search"
-                    />
-                  </template>
-                </v-text-field>
-              </template>
-            </v-dialog>
             <v-spacer />
             <v-btn
               variant="plain"
@@ -232,38 +203,7 @@
             />
           </v-toolbar>
         </template>
-        <v-list v-if="searchResults">
-          <v-list-item>
-            Search Results for "{{ enteredSearch }}"
-            <template v-slot:append>
-              <v-btn
-                variant="plain"
-                icon="fa-solid fa-close"
-                @click="searchResults = null"
-              />
-            </template>
-          </v-list-item>
-          <v-list-item v-if="searchResults.length === 0">
-            No results
-          </v-list-item>
-          <v-list-item
-            v-for="result in searchResults"
-            :active="result.translatable_item === selected"
-            @click="() => {
-              router.push(`/${result.translatable_item}`)
-            }"
-          >
-            <v-list-item-title>
-              <ContentReference
-                :key="result.translatable_item"
-                :id="result.translatable_item"
-              />
-            </v-list-item-title>
-          </v-list-item>
-        </v-list>
-        <v-list
-          v-else
-        >
+        <v-list>
           <v-list-item
             v-for="id in translatableItemIds"
             :active="id === selected"
@@ -292,6 +232,13 @@
           {{ domain }}
         </template>
         <template v-slot:append>
+          <v-btn
+            icon="fa-solid fa-search"
+            class="mr-3"
+            @click="() => {
+              if (selected) router.push('/')
+            }"
+          />
           <v-switch
             class="mr-4"
             v-model="editing"
@@ -313,7 +260,37 @@
         :languages="appState.languages"
       />
       <v-container v-else>
-        home page
+        <v-text-field
+          variant="outlined"
+          autofocus
+          clearable
+          v-model="search"
+          @keypress.enter="fetchSearchResults(search)"
+        >
+          <template v-slot:append-inner>
+            <v-btn
+              text="Search"
+              @click="() => fetchSearchResults(search)"
+            />
+          </template>
+        </v-text-field>
+        <v-list>
+          <v-list-item v-if="searchResults && searchResults.length === 0">
+            No results for "{{ enteredSearch }}"
+          </v-list-item>
+          <v-list-item
+            v-for="result in searchResults"
+            @click="router.push(`/${result.translatable_item}`)"
+          >
+            <v-list-item-title>
+              <ContentReference :id="result.translatable_item" />
+              {{ result.path.slice(1) }}
+            </v-list-item-title>
+            <v-list-item-subtitle>
+              <b>{{ languageCodes[result.language] }}:</b> <i>{{ result.match }}</i>
+            </v-list-item-subtitle>
+          </v-list-item>
+        </v-list>
       </v-container>
     </v-main>
   </v-app>

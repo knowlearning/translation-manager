@@ -91,6 +91,7 @@ postgres:
         translatable_targets.path AS path,
         translatable_targets.id AS translatable_target,
         translatable_targets.source_language AS source_language,
+        translatable_targets.source_string AS source,
         translations.id AS translation,
         translations.value AS match,
         translations.language AS language
