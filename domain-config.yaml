@@ -118,6 +118,7 @@ postgres:
       domains:
       - f74e9cb3-2b53-4c85-9b0c-f1d61b032b3f.localhost:5888
       - c0f3a481-d4d5-4133-a198-94a325aa4536.localhost:6061
+      - create.pilaproject.org
       body: |
         SELECT
           translatable_targets.id AS translatable_target,
@@ -156,9 +157,7 @@ postgres:
           )
           AND translatable_targets.path->0 = to_jsonb($1::text)
     translations-for-item:
-      domains:
-      - f74e9cb3-2b53-4c85-9b0c-f1d61b032b3f.localhost:5888
-      - c0f3a481-d4d5-4133-a198-94a325aa4536.localhost:6061
+      domains: []
       body: |
         SELECT
           translatable_targets.id AS translatable_target,
