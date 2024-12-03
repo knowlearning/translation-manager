@@ -19,7 +19,7 @@
   ])
 
 
-  if (!appStateNonReactive.domains  ) appStateNonReactive.domains   = [window.location.host]
+  if (!appStateNonReactive.domains  ) appStateNonReactive.domains   = [itemDomain]
   if (!appStateNonReactive.languages) appStateNonReactive.languages = []
 
   const appState = reactive(appStateNonReactive)
@@ -28,7 +28,7 @@
   const translatableItems = await Agent.query('translatable-items', [domain.value])
   const translatableItemIds = reactive(translatableItems.map(i => i.translatable_item))
   const editing = ref(false)
-  const domainEntry = ref(window.location.host)
+  const domainEntry = ref(itemDomain)
   const search = ref('')
   const enteredSearch = ref('')
   const searchResults = ref(null)
@@ -250,7 +250,6 @@
             v-for="result in searchResults"
             :active="result.translatable_item === selected"
             @click="() => {
-              selected = result.translatable_item
               router.push(`/${result.translatable_item}`)
             }"
           >
@@ -268,10 +267,7 @@
           <v-list-item
             v-for="id in translatableItemIds"
             :active="id === selected"
-            @click="() => {
-              selected = id
-              router.push(`/${id}`)
-            }"
+            @click="router.push(`/${id}`)"
           >
             <v-list-item-title>
               <ContentReference
