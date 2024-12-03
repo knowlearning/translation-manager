@@ -192,7 +192,7 @@
               v-else
               variant="plain"
               size="x-small"
-              icon="fa fa-pencil"
+              icon="fa fa-add"
               @click="() => {
                 addingNewSourceValue = true
                 openEditor = null
