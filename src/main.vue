@@ -29,6 +29,9 @@
   const translatableItemIds = reactive(translatableItems.map(i => i.translatable_item))
   const editing = ref(false)
   const domainEntry = ref(window.location.host)
+  const search = ref('')
+  const enteredSearch = ref('')
+  const searchResults = ref(null)
 
   console.log(appState.languages)
 
@@ -89,6 +92,11 @@
     if (index > -1) appState.domains.splice(index, 1)
   }
 
+  async function fetchSearchResults(query) {
+    enteredSearch.value = query
+    searchResults.value = await Agent.query('search-translations', [domain.value, query])
+  }
+
   window.appState = appState
 </script>
 
@@ -105,7 +113,6 @@
             <v-menu location="bottom">
               <template v-slot:activator="slot">
                 <v-btn
-                  class="mr-2"
                   icon="fa-solid fa-gear"
                   v-bind="slot.props"
                 />
@@ -188,6 +195,35 @@
                   />
                 </v-list>
             </v-menu>
+            <v-dialog
+              max-width="700"
+              style="
+                margin-top: 32px !important;
+                align-items: flex-start !important;
+              "
+            >
+              <template v-slot:activator="{ props: activatorProps }">
+                <v-btn
+                  icon="fa-solid fa-search"
+                  v-bind="activatorProps"
+                />
+              </template>
+              <template v-slot:default="{ isActive }">
+                <v-text-field
+                  variant="solo"
+                  autofocus
+                  clearable
+                  v-model="search"
+                  @keypress.enter="fetchSearchResults(search)"
+                >
+                  <template v-slot:append-inner>
+                    <v-btn
+                      text="Search"
+                    />
+                  </template>
+                </v-text-field>
+              </template>
+            </v-dialog>
             <v-spacer />
             <v-btn
               variant="plain"
@@ -196,7 +232,39 @@
             />
           </v-toolbar>
         </template>
-        <v-list>
+        <v-list v-if="searchResults">
+          <v-list-item>
+            Search Results for "{{ enteredSearch }}"
+            <template v-slot:append>
+              <v-btn
+                variant="plain"
+                icon="fa-solid fa-close"
+                @click="searchResults = null"
+              />
+            </template>
+          </v-list-item>
+          <v-list-item v-if="searchResults.length === 0">
+            No results
+          </v-list-item>
+          <v-list-item
+            v-for="result in searchResults"
+            :active="result.translatable_item === selected"
+            @click="() => {
+              selected = result.translatable_item
+              router.push(`/${result.translatable_item}`)
+            }"
+          >
+            <v-list-item-title>
+              <ContentReference
+                :key="result.translatable_item"
+                :id="result.translatable_item"
+              />
+            </v-list-item-title>
+          </v-list-item>
+        </v-list>
+        <v-list
+          v-else
+        >
           <v-list-item
             v-for="id in translatableItemIds"
             :active="id === selected"
@@ -248,6 +316,9 @@
         :translatableItemId="selected"
         :languages="appState.languages"
       />
+      <v-container v-else>
+        home page
+      </v-container>
     </v-main>
   </v-app>
   <v-app v-else>
