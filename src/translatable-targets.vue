@@ -1,5 +1,6 @@
 <script setup>
   import { reactive, ref, watch } from 'vue'
+import ContentReference from './content-reference.vue';
 
   const TRANSLATION_DOMAIN = 'f74e9cb3-2b53-4c85-9b0c-f1d61b032b3f.localhost:5889'
   const CURRENT_DOMAIN = window.location.host
@@ -166,6 +167,9 @@
 
 <template>
   <v-container>
+    <div class="text-h3 my-8">
+      <ContentReference :id="id" />
+    </div>
     <v-data-table
       :headers="headers"
       :items="items"
