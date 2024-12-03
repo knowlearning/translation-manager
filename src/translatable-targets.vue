@@ -209,22 +209,25 @@
               v-model="newSourceValue"
               hide-details
               @keydown.shift.enter="saveNewSource"
-            />
-            <v-btn
-              v-if="addingNewSourceValue"
-              text="Save"
-              @click="() => {
-                addingNewSourceValue = false
-                saveNewSource()
-              }"
-            />
-            <v-btn
-              v-if="addingNewSourceValue"
-              text="Cancel"
-              @click="() => {
-                addingNewSourceValue = false
-              }"
-            />
+            >
+              <template v-slot:append>
+                <v-btn
+                  v-if="addingNewSourceValue"
+                  text="Save"
+                  @click="() => {
+                    addingNewSourceValue = false
+                    saveNewSource()
+                  }"
+                />
+                <v-btn
+                  v-if="addingNewSourceValue"
+                  text="Cancel"
+                  @click="() => {
+                    addingNewSourceValue = false
+                  }"
+                />
+              </template>
+            </v-textarea>
           </td>
           <td
             v-for="header in headers.slice(2)"
