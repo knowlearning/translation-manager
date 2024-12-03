@@ -1,8 +1,7 @@
 <script setup>
   import { reactive, ref, watch } from 'vue'
-import ContentReference from './content-reference.vue';
+  import ContentReference from './content-reference.vue';
 
-  const TRANSLATION_DOMAIN = 'f74e9cb3-2b53-4c85-9b0c-f1d61b032b3f.localhost:5889'
   const CURRENT_DOMAIN = window.location.host
   const { auth: { user: CURRENT_USER } } = await Agent.environment()
 
@@ -42,7 +41,7 @@ import ContentReference from './content-reference.vue';
   )
 
   async function loadTranslations() {
-    const translations = await Agent.query('translations-for-item', [id, props.languages], TRANSLATION_DOMAIN)
+    const translations = await Agent.query('translations-for-item', [id, props.languages])
 
     console.log('translations-for-item', translations)
     const languagePlaceholders = Object.fromEntries(props.languages.map(k => [k, null]))
