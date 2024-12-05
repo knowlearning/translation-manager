@@ -50,7 +50,7 @@
 
     const t = (
       translations
-        .reduce((acc, { translatable_target, language, path, is_source, value }) => {
+        .reduce((acc, { translatable_target, language, path, is_current, is_source, value }) => {
           if (!acc[translatable_target]) {
             acc[translatable_target] = {
               path: path.slice(1),
@@ -64,7 +64,10 @@
             sourceLanguage = language
           }
 
-          acc[translatable_target][language] = value
+          acc[translatable_target][language] = {
+            value,
+            is_current
+          }
 
           return acc
         }, {})
@@ -98,9 +101,9 @@
 
   async function save(item, language) {
     // TODO: ensure optimistic update applied
-    const editedValue = edits[editKey(item, language)]
-    item[language] = editedValue
-    saveLanguageTranslation(item, language, editedValue)
+    const value = edits[editKey(item, language)]
+    item[language] = { is_current: true, value }
+    saveLanguageTranslation(item, language, value)
     openEditor.value = null
   }
 
@@ -166,8 +169,11 @@
 
 <template>
   <v-container>
-    <div class="text-h3 my-8">
+    <div class="text-h3 mt-8">
       <ContentReference :id="id" />
+    </div>
+    <div class="text-h8 mb-8">
+      {{ id }}
     </div>
     <v-data-table
       :headers="headers"
@@ -272,7 +278,13 @@
           />
         </div>
         <div v-else>
-          {{ value }}
+          <v-icon
+            v-if="value && !value.is_current"
+            class="mr-2"
+            icon="fa-solid fa-clock-rotate-left"
+            tooltip="woo"
+          />
+          {{ value ? value.value : '' }}
           <v-btn
             v-if="props.editing && !openEditor"
             variant="plain"
@@ -281,7 +293,7 @@
             @click="() => {
               const key = editKey(item, language)
               openEditor = key
-              edits[key] = edits[key] || value
+              edits[key] = edits[key] || (value ? value.value : '')
               addingNewSourceValue = false
             }"
           />

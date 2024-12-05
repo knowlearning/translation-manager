@@ -162,32 +162,17 @@ postgres:
         SELECT
           translatable_targets.id AS translatable_target,
           translatable_targets.path AS path,
-          COALESCE(
-            translations.language,
-            translatable_targets.source_language
-          ) AS language,
-          COALESCE(
-            translations.value,
-            translatable_targets.source_string
-          ) AS value,
-          (translations.value IS NULL) AS fallback,
+          translations.language AS language,
+          translations.value AS value,
           (translatable_targets.source_language = translations.language) AS is_source,
           target_md.updated <= translation_md.updated AS is_current
         FROM translatable_targets
         JOIN metadata target_md ON target_md.id = translatable_targets.id
-        LEFT JOIN LATERAL (
-          SELECT
-            t.id,
-            t.language,
-            t.value
-          FROM translations t
-          WHERE t.translatable_target = translatable_targets.id
-            AND (
-              t.language = ANY($2)
-              OR t.language = translatable_targets.source_language
-            )
-        ) translations ON true
-        LEFT JOIN metadata translation_md ON translation_md.id = translations.id
+        JOIN translations ON (
+          translations.translatable_target = translatable_targets.id
+          AND translations.language = ANY(ARRAY[translatable_targets.source_language] || $2)
+        )
+        JOIN metadata translation_md ON translation_md.id = translations.id
           AND translation_md.owner = $DOMAIN
         WHERE (
             target_md.owner = $REQUESTING_DOMAIN
