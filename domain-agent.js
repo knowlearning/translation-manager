@@ -17,15 +17,16 @@
         const [,, language] = scope.split('/')
 
         const paths = await Agent.state(id)
+        Agent.log('TRANSLATIONS PATCH', patch)
 
-        // TODO: smarter updating based on patch data
-        await Promise.all(
-          Object
-            .entries(paths)
-            .map(async ([translatable_target, language_string]) => {
-              return setTranslation(translatable_target, language, language_string)
-            })
-        )
+        const { op, path: [translatable_target], value } = patch[0]
+
+        if (op === 'add' || op === 'replace') {
+          setTranslation(translatable_target, language, value)
+        }
+        else if (op === 'remove') {
+          setTranslation(translatable_target, language, null)
+        }
       }
       else if (await isTranslatableItem(id)) {
         await handleTranslatableItem(id)
