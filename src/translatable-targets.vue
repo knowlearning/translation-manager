@@ -245,7 +245,12 @@
         </tr>
       </template>
       <template v-slot:item.path="{ value }">
-        {{ value }}
+        <v-chip
+          v-for="v in value"
+          class="mr-1"
+        >
+          {{v}}
+        </v-chip>
       </template>
       <template v-slot:item.source="{ value }">
         {{ value }}
