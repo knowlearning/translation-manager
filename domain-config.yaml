@@ -159,12 +159,12 @@ postgres:
         ) translations ON true
         LEFT JOIN metadata translation_md ON translation_md.id = translations.id
           AND translation_md.owner = $DOMAIN
-        JOIN max_ii ON translatable_targets.ii = max_ii.highest_ii
         WHERE (
             target_md.owner = $REQUESTING_DOMAIN
             OR $REQUESTING_DOMAIN = $DOMAIN
           )
           AND translatable_targets.path->0 = to_jsonb($1::text)
+          AND translatable_targets.ii = (SELECT highest_ii FROM max_ii)
     translations-for-item:
       domains: []
       body: |
