@@ -11,6 +11,7 @@ postgres:
         source_language: TEXT
         source_string: TEXT
         path: JSONB
+        ii: INTEGER
     translations:
       type: application/json;type=translation
       columns:
@@ -122,6 +123,10 @@ postgres:
       - thailand.pilaproject.org
       - app.pilaproject.org
       body: |
+        WITH max_ii AS (
+          SELECT MAX(ii) AS highest_ii
+          FROM translatable_targets
+        )
         SELECT
           translatable_targets.id AS translatable_target,
           translatable_targets.path AS path,
@@ -153,6 +158,7 @@ postgres:
         ) translations ON true
         LEFT JOIN metadata translation_md ON translation_md.id = translations.id
           AND translation_md.owner = $DOMAIN
+        JOIN max_ii ON translatable_targets.ii = max_ii.highest_ii
         WHERE (
             target_md.owner = $REQUESTING_DOMAIN
             OR $REQUESTING_DOMAIN = $DOMAIN
@@ -218,7 +224,6 @@ agent: |
     })
   })
 
-
   async function setTranslation(id, language, string) {
     const scope = await getTranslationScope(id, language)
 
@@ -243,27 +248,23 @@ agent: |
 
   async function handleTranslatableItem(id) {
     const itemState = await Agent.state(id)
+    const itemMetadata = await Agent.metadata(id)
     await Promise.all(itemState.translations.paths.map(async path => {
       const translatableTargetName = `translatable_target/${JSON.stringify([id, ...path])}`
-      Agent.log('GETTING METADATA', translatableTargetName)
       const translatableTargetMetadata = await Agent.metadata(translatableTargetName)
-      Agent.log('GOT METADATA', JSON.parse(JSON.stringify(translatableTargetMetadata)))
 
       if (translatableTargetMetadata.active_type !== TRANSLATABLE_TARGET_TYPE) {
         translatableTargetMetadata.active_type = TRANSLATABLE_TARGET_TYPE
       }
 
-      Agent.log('GETTING STATE', translatableTargetName)
       const translatableTarget = await Agent.state(translatableTargetName)
-      Agent.log('GOT STATE', JSON.stringify(translatableTarget))
 
       const { source_language } = itemState.translations
 
       translatableTarget.source_language = source_language
       translatableTarget.path = [id, ...path]
-      Agent.log('RESOLVING PATH', [...path])
+      translatableTarget.ii = itemMetadata.ii
       const source_string = resolvePath([...path], itemState)
-      Agent.log('GOT SOURCE STRING', translatableTargetName, source_string)
       if (source_string) {
         translatableTarget.source_string = source_string
         await setTranslation(

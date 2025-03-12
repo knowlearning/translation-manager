@@ -34,7 +34,6 @@
     })
   })
 
-
   async function setTranslation(id, language, string) {
     const scope = await getTranslationScope(id, language)
 
@@ -59,27 +58,23 @@
 
   async function handleTranslatableItem(id) {
     const itemState = await Agent.state(id)
+    const itemMetadata = await Agent.metadata(id)
     await Promise.all(itemState.translations.paths.map(async path => {
       const translatableTargetName = `translatable_target/${JSON.stringify([id, ...path])}`
-      Agent.log('GETTING METADATA', translatableTargetName)
       const translatableTargetMetadata = await Agent.metadata(translatableTargetName)
-      Agent.log('GOT METADATA', JSON.parse(JSON.stringify(translatableTargetMetadata)))
 
       if (translatableTargetMetadata.active_type !== TRANSLATABLE_TARGET_TYPE) {
         translatableTargetMetadata.active_type = TRANSLATABLE_TARGET_TYPE
       }
 
-      Agent.log('GETTING STATE', translatableTargetName)
       const translatableTarget = await Agent.state(translatableTargetName)
-      Agent.log('GOT STATE', JSON.stringify(translatableTarget))
 
       const { source_language } = itemState.translations
 
       translatableTarget.source_language = source_language
       translatableTarget.path = [id, ...path]
-      Agent.log('RESOLVING PATH', [...path])
+      translatableTarget.ii = itemMetadata.ii
       const source_string = resolvePath([...path], itemState)
-      Agent.log('GOT SOURCE STRING', translatableTargetName, source_string)
       if (source_string) {
         translatableTarget.source_string = source_string
         await setTranslation(
