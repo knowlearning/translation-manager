@@ -126,6 +126,7 @@ postgres:
         WITH max_ii AS (
           SELECT MAX(ii) AS highest_ii
           FROM translatable_targets
+          WHERE translatable_targets.path->0 = to_jsonb($1::text)
         )
         SELECT
           translatable_targets.id AS translatable_target,
