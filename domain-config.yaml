@@ -164,7 +164,7 @@ postgres:
             OR $REQUESTING_DOMAIN = $DOMAIN
           )
           AND translatable_targets.path->0 = to_jsonb($1::text)
-          AND translatable_targets.ii = (SELECT highest_ii FROM max_ii)
+          AND (translatable_targets.ii IS DISTINCT FROM (SELECT highest_ii FROM max_ii)) = FALSE
     translations-for-item:
       domains: []
       body: |
