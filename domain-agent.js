@@ -86,8 +86,14 @@
     }))
   }
 
+  const sessions = {}
   async function isTranslatableItem(id) {
+    if (sessions[id]) return false
+
     const state = await Agent.state(id)
+    const { name } = await Agent.metadata(id)
+    if (name === 'sessions') sessions[id] = true
+
     //  TODO: validate schema
     return !!state.translations
   }
