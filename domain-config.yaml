@@ -122,6 +122,7 @@ postgres:
       - create.pilaproject.org
       - thailand.pilaproject.org
       - polska-rct-2025.pilaproject.org
+      - france-rct-2025.pilaproject.org
       - cambodia.pilaproject.org
       - app.pilaproject.org
       body: |
