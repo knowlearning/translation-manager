@@ -162,11 +162,7 @@ postgres:
         ) translations ON true
         LEFT JOIN metadata translation_md ON translation_md.id = translations.id
           AND translation_md.owner = $DOMAIN
-        WHERE (
-            target_md.owner = $REQUESTING_DOMAIN
-            OR $REQUESTING_DOMAIN = $DOMAIN
-          )
-          AND translatable_targets.path->0 = to_jsonb($1::text)
+        WHERE translatable_targets.path->0 = to_jsonb($1::text)
           AND (translatable_targets.ii IS DISTINCT FROM (SELECT highest_ii FROM max_ii)) = FALSE
     translations-for-item:
       domains: []
