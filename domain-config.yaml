@@ -126,6 +126,7 @@ postgres:
       - pila.gforcesolution.com
       - polska-rct-2025.pilaproject.org
       - france-rct-2025.pilaproject.org
+      - testing.pilaproject.org
       - cambodia.pilaproject.org
       - app.pilaproject.org
       body: |
