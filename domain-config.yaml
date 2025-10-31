@@ -190,6 +190,7 @@ postgres:
             target_md.owner = $REQUESTING_DOMAIN
             OR $REQUESTING_DOMAIN = $DOMAIN
             OR target_md.owner = 'f74e9cb3-2b53-4c85-9b0c-f1d61b032b3f'
+            OR target_md.owner = 'c0f3a481-d4d5-4133-a198-94a325aa4536'
           )
           AND translatable_targets.path->0 = to_jsonb($1::text)
 agent: |
