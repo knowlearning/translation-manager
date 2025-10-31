@@ -15,7 +15,7 @@
     const state = await Agent.state(props.id)
     if (state.name) name.value = state.name
     else {
-      const md = await Agent.metadata(id)
+      const md = await Agent.metadata(props.id)
       name.value = md.name
     }
   }

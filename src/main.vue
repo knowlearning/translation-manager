@@ -1,5 +1,6 @@
 <script setup>
   import { ref, watch, reactive, computed } from 'vue'
+  import { validate as isUUID } from 'uuid'
   import TranslatableTargets from './translatable-targets.vue'
   import ContentReference from'./content-reference.vue'
   import { useRouter } from 'vue-router'
@@ -38,17 +39,12 @@
   const loggedIn = env.auth.provider !== 'anonymous'
 
   async function createNewItem() {
-    const id = Agent.uuid()
-    const state = await Agent.state(id)
-    state.name = 'Wooo?'
-    state.translations = {
-      source_language: 'en-us',
-      paths: [
-        ['name']
-      ]
+    const id = prompt('insert id of item to translate')
+    if (isUUID(id)) {
+      router.push(`/${id}`)
+      translatableItemIds.unshift(id)
     }
-    selected.value = id
-    translatableItemIds.unshift(id)
+    else alert('invalid id')
   }
 
   watch(() => domain.value, async () => {
