@@ -3,6 +3,9 @@
   import ContentReference from './content-reference.vue';
 
   const CURRENT_DOMAIN = window.location.host
+  const TRANSLATION_TYPE = 'application/json;type=translation'
+  const TRANSLATABLE_TARGET_TYPE = 'application/json;type=translatable_target'
+
   const { auth: { user: CURRENT_USER } } = await Agent.environment()
 
   const props = defineProps({
@@ -17,21 +20,9 @@
   const edits = reactive({})
   const openEditor = ref(null)
   const editingSource = ref(false)
-  const itemMd = ref(null)
-  const itemState = ref(null)
-  const addingNewSourceValue = ref(false)
-  const newSourceKey = ref('')
-  const newSourceValue= ref('')
-
-  Agent
-    .metadata(id)
-    .then(async md => {
-      if (md.domain === CURRENT_DOMAIN && md.owner === CURRENT_USER) {
-        itemState.value = await Agent.state(id)
-      }
-      itemMd.value = md
-    })
-    .catch(() => {})
+  const addingNewTarget = ref(false)
+  const newTargetPath = ref('')
+  const newTargetValue= ref('')
 
   await loadTranslations()
 
@@ -107,33 +98,6 @@
     openEditor.value = null
   }
 
-  async function updateSource(jsonObject) {
-    const sourceState = itemState.value
-    const { source_language } = JSON.parse(JSON.stringify(sourceState.translations))
-    Object
-      .keys(sourceState)
-      .filter(key => jsonObject[key] === undefined)
-      .forEach(key => delete sourceState[key])
-
-    const paths = getAllPaths(jsonObject)
-
-    Object
-      .assign(
-        sourceState,
-        {
-          ...jsonObject,
-          translations: {
-            source_language,
-            paths
-          }
-        }
-      )
-    console.log(sourceState)
-
-    editingSource.value = false
-    await loadTranslations()
-  }
-
   function getAllPaths(obj, currentPath = []) {
     const paths = []
     if (typeof obj !== "object" || obj === null) {
@@ -158,10 +122,27 @@
     return paths
   }
 
-  function saveNewSource() {
-    // TODO: do not put new keys in translations
-    itemState.value[newSourceKey.value] = newSourceValue.value
-    itemState.value.translations.paths.push([newSourceKey.value])
+  async function saveNewTarget() {
+    let path = [id]
+    try {
+      path.push(...JSON.parse(newTargetPath.value))
+    }
+    catch (e) {
+      path.push(newTargetPath.value)
+    }
+    const name = `translatable_target/${JSON.stringify(path)}`
+    const target = await Agent.state(name)
+    const md = await Agent.metadata(name)
+    if (md.active_type !== TRANSLATABLE_TARGET_TYPE) md.active_type = TRANSLATABLE_TARGET_TYPE
+
+    target.path = path
+    target.source_language = 'en' // TODO: pull reasonable setting here
+    target.source_string = newTargetValue.value
+
+    newTargetPath.value = ''
+    newTargetValue.value = ''
+
+    await Agent.response()
     loadTranslations()
   }
 
@@ -183,19 +164,19 @@
     >
       <template v-slot:body.prepend>
         <tr
-          v-if="editing && itemState && items.length"
+          v-if="editing"
           key="edit-row"
         >
           <td>
             <v-text-field
-              v-if="addingNewSourceValue"
+              v-if="addingNewTarget"
               variant="outlined"
               autofocus
               auto-grow
               hide-details
               min-width="128px"
-              v-model="newSourceKey"
-              @keydown.shift.enter="saveNewSource"
+              v-model="newTargetPath"
+              @keydown.shift.enter="saveNewTarget"
             />
             <v-btn
               v-else
@@ -203,36 +184,33 @@
               size="x-small"
               icon="fa fa-add"
               @click="() => {
-                addingNewSourceValue = true
+                addingNewTarget = true
                 openEditor = null
               }"
             />
           </td>
           <td>
             <v-textarea
-              v-if="addingNewSourceValue"
+              v-if="addingNewTarget"
               variant="outlined"
               autofocus
               auto-grow
               rows="1"
-              v-model="newSourceValue"
+              v-model="newTargetValue"
               hide-details
-              @keydown.shift.enter="saveNewSource"
+              @keydown.shift.enter="saveNewTarget"
             >
               <template v-slot:append>
                 <v-btn
-                  v-if="addingNewSourceValue"
+                  v-if="addingNewTarget"
                   text="Save"
-                  @click="() => {
-                    addingNewSourceValue = false
-                    saveNewSource()
-                  }"
+                  @click="saveNewTarget"
                 />
                 <v-btn
-                  v-if="addingNewSourceValue"
+                  v-if="addingNewTarget"
                   text="Cancel"
                   @click="() => {
-                    addingNewSourceValue = false
+                    addingNewTarget = false
                   }"
                 />
               </template>
@@ -299,7 +277,7 @@
               const key = editKey(item, language)
               openEditor = key
               edits[key] = edits[key] || (value ? value.value : '')
-              addingNewSourceValue = false
+              addingNewTarget = false
             }"
           />
         </div>
