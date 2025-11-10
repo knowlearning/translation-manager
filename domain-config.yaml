@@ -129,6 +129,7 @@ postgres:
       - testing.pilaproject.org
       - cambodia.pilaproject.org
       - app.pilaproject.org
+      - tags.knowlearning.systems
       body: |
         WITH max_ii AS (
           SELECT MAX(ii) AS highest_ii
