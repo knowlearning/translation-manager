@@ -35,6 +35,7 @@
   const searchResults = ref(null)
 
   console.log(appState.languages)
+  console.log('num items', translatableItems.length)
 
   const loggedIn = env.auth.provider !== 'anonymous'
 
@@ -201,7 +202,7 @@
         </template>
         <v-list>
           <v-list-item
-            v-for="id in translatableItemIds"
+            v-for="id in translatableItemIds.slice(0, 20)"
             :active="id === selected"
             @click="router.push(`/${id}`)"
           >
