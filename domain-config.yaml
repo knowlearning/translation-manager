@@ -130,6 +130,7 @@ postgres:
       - testing.pilaproject.org
       - cambodia.pilaproject.org
       - app.pilaproject.org
+      - ui-dev.pilaproject.org
       - tags.knowlearning.systems
       body: |
         WITH max_ii AS (
