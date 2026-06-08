@@ -121,16 +121,9 @@ postgres:
       - f74e9cb3-2b53-4c85-9b0c-f1d61b032b3f.localhost:9898
       - c0f3a481-d4d5-4133-a198-94a325aa4536.localhost:6061
       - f74e9cb3-2b53-4c85-9b0c-f1d61b032b3f.localhost:5222
-      - create.pilaproject.org
-      - thailand.pilaproject.org
       - dev.gforcesolution.com
       - pila.gforcesolution.com
-      - polska-rct-2025.pilaproject.org
-      - france-rct-2025.pilaproject.org
-      - testing.pilaproject.org
-      - cambodia.pilaproject.org
-      - app.pilaproject.org
-      - ui-dev.pilaproject.org
+      - '*.pilaproject.org'
       - tags.knowlearning.systems
       body: |
         WITH max_ii AS (
